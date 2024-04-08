@@ -7,6 +7,8 @@ import hookCommand, { isCalledFromGitHook } from './commands/hook.js';
 
 const rawArgv = process.argv.slice(2);
 
+console.log('some new change');
+
 cli(
 	{
 		name: 'aicommits',
