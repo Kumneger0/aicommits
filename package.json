@@ -1,6 +1,6 @@
 {
   "name": "aicg",
-  "version": "0.0.0-semantic-release",
+  "version": "0.0.1-semantic-release",
   "description": "Writes your git commit messages for you with AI",
   "keywords": [
     "ai",
@@ -19,6 +19,6 @@
     "aic": "./dist/cli.mjs"
   },
   "dependencies": {
-    "@dqbd/tiktoken": "^1.0.2"
+    "@dqbd/tiktoken": "^1.0.13"
   }
 }

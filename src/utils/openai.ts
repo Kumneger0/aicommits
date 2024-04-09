@@ -161,7 +161,6 @@ export const generateCommitMessage = async (
 				`Error connecting to ${errorAsAny.hostname} (${errorAsAny.syscall}). Are you connected to the internet?`
 			);
 		}
-		return ['message one', 'message two'];
 
 		throw errorAsAny;
 	}
