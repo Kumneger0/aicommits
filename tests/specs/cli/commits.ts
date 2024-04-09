@@ -19,7 +19,7 @@ export default testSuite(({ describe }) => {
 
 	describe('Commits', async ({ test, describe }) => {
 		test('Excludes files', async () => {
-			const { fixture, aicommits } = await createFixture(files);
+			const { fixture, aicg } = await createFixture(files);
 			const git = await createGit(fixture.path);
 
 			await git('add', ['data.json']);
@@ -29,7 +29,7 @@ export default testSuite(({ describe }) => {
 			]);
 			expect(statusBefore.stdout).toBe('A  data.json');
 
-			const { stdout, exitCode } = await aicommits(['--exclude', 'data.json'], {
+			const { stdout, exitCode } = await aicg(['--exclude', 'data.json'], {
 				reject: false,
 			});
 			expect(exitCode).toBe(1);
@@ -38,12 +38,12 @@ export default testSuite(({ describe }) => {
 		});
 
 		test('Generates commit message', async () => {
-			const { fixture, aicommits } = await createFixture(files);
+			const { fixture, aicg } = await createFixture(files);
 			const git = await createGit(fixture.path);
 
 			await git('add', ['data.json']);
 
-			const committing = aicommits();
+			const committing = aicg();
 			committing.stdout!.on('data', (buffer: Buffer) => {
 				const stdout = buffer.toString();
 				if (stdout.match('└')) {
@@ -73,16 +73,16 @@ export default testSuite(({ describe }) => {
 		});
 
 		test('Generated commit message must be under 20 characters', async () => {
-			const { fixture, aicommits } = await createFixture({
+			const { fixture, aicg } = await createFixture({
 				...files,
-				'.aicommits': `${files['.aicommits']}\nmax-length=20`,
+				'.aicg': `${files['.aicg']}\nmax-length=20`,
 			});
 
 			const git = await createGit(fixture.path);
 
 			await git('add', ['data.json']);
 
-			const committing = aicommits();
+			const committing = aicg();
 			committing.stdout!.on('data', (buffer: Buffer) => {
 				const stdout = buffer.toString();
 				if (stdout.match('└')) {
@@ -106,7 +106,7 @@ export default testSuite(({ describe }) => {
 		});
 
 		test('Accepts --all flag, staging all changes before commit', async () => {
-			const { fixture, aicommits } = await createFixture(files);
+			const { fixture, aicg } = await createFixture(files);
 			const git = await createGit(fixture.path);
 
 			await git('add', ['data.json']);
@@ -116,9 +116,9 @@ export default testSuite(({ describe }) => {
 			await fixture.writeFile('data.json', 'Test');
 
 			const statusBefore = await git('status', ['--short']);
-			expect(statusBefore.stdout).toBe(' M data.json\n?? .aicommits');
+			expect(statusBefore.stdout).toBe(' M data.json\n?? .aicg');
 
-			const committing = aicommits(['--all']);
+			const committing = aicg(['--all']);
 			committing.stdout!.on('data', (buffer: Buffer) => {
 				const stdout = buffer.toString();
 				if (stdout.match('└')) {
@@ -130,7 +130,7 @@ export default testSuite(({ describe }) => {
 			await committing;
 
 			const statusAfter = await git('status', ['--short']);
-			expect(statusAfter.stdout).toBe('?? .aicommits');
+			expect(statusAfter.stdout).toBe('?? .aicg');
 
 			const { stdout: commitMessage } = await git('log', [
 				'-n1',
@@ -148,16 +148,16 @@ export default testSuite(({ describe }) => {
 		test('Accepts --generate flag, overriding config', async ({
 			onTestFail,
 		}) => {
-			const { fixture, aicommits } = await createFixture({
+			const { fixture, aicg } = await createFixture({
 				...files,
-				'.aicommits': `${files['.aicommits']}\ngenerate=4`,
+				'.aicg': `${files['.aicg']}\ngenerate=4`,
 			});
 			const git = await createGit(fixture.path);
 
 			await git('add', ['data.json']);
 
 			// Generate flag should override generate config
-			const committing = aicommits(['--generate', '2']);
+			const committing = aicg(['--generate', '2']);
 
 			// Hit enter to accept the commit message
 			committing.stdout!.on('data', function onPrompt(buffer: Buffer) {
@@ -198,15 +198,15 @@ export default testSuite(({ describe }) => {
 			const japanesePattern =
 				/[\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFF9F\u4E00-\u9FAF\u3400-\u4DBF]/;
 
-			const { fixture, aicommits } = await createFixture({
+			const { fixture, aicg } = await createFixture({
 				...files,
-				'.aicommits': `${files['.aicommits']}\nlocale=ja`,
+				'.aicg': `${files['.aicg']}\nlocale=ja`,
 			});
 			const git = await createGit(fixture.path);
 
 			await git('add', ['data.json']);
 
-			const committing = aicommits();
+			const committing = aicg();
 
 			committing.stdout!.on('data', (buffer: Buffer) => {
 				const stdout = buffer.toString();
@@ -241,14 +241,14 @@ export default testSuite(({ describe }) => {
 			test('Should not use conventional commits by default', async () => {
 				const conventionalCommitPattern =
 					/(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test):\s/;
-				const { fixture, aicommits } = await createFixture({
+				const { fixture, aicg } = await createFixture({
 					...files,
 				});
 				const git = await createGit(fixture.path);
 
 				await git('add', ['data.json']);
 
-				const committing = aicommits();
+				const committing = aicg();
 
 				committing.stdout!.on('data', (buffer: Buffer) => {
 					const stdout = buffer.toString();
@@ -276,15 +276,15 @@ export default testSuite(({ describe }) => {
 			test('Conventional commits', async () => {
 				const conventionalCommitPattern =
 					/(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test):\s/;
-				const { fixture, aicommits } = await createFixture({
+				const { fixture, aicg } = await createFixture({
 					...files,
-					'.aicommits': `${files['.aicommits']}\ntype=conventional`,
+					'.aicg': `${files['.aicg']}\ntype=conventional`,
 				});
 				const git = await createGit(fixture.path);
 
 				await git('add', ['data.json']);
 
-				const committing = aicommits();
+				const committing = aicg();
 
 				committing.stdout!.on('data', (buffer: Buffer) => {
 					const stdout = buffer.toString();
@@ -312,16 +312,16 @@ export default testSuite(({ describe }) => {
 			test('Accepts --type flag, overriding config', async () => {
 				const conventionalCommitPattern =
 					/(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test):\s/;
-				const { fixture, aicommits } = await createFixture({
+				const { fixture, aicg } = await createFixture({
 					...files,
-					'.aicommits': `${files['.aicommits']}\ntype=other`,
+					'.aicg': `${files['.aicg']}\ntype=other`,
 				});
 				const git = await createGit(fixture.path);
 
 				await git('add', ['data.json']);
 
 				// Generate flag should override generate config
-				const committing = aicommits(['--type', 'conventional']);
+				const committing = aicg(['--type', 'conventional']);
 
 				committing.stdout!.on('data', (buffer: Buffer) => {
 					const stdout = buffer.toString();
@@ -349,15 +349,15 @@ export default testSuite(({ describe }) => {
 			test('Accepts empty --type flag', async () => {
 				const conventionalCommitPattern =
 					/(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test):\s/;
-				const { fixture, aicommits } = await createFixture({
+				const { fixture, aicg } = await createFixture({
 					...files,
-					'.aicommits': `${files['.aicommits']}\ntype=conventional`,
+					'.aicg': `${files['.aicg']}\ntype=conventional`,
 				});
 				const git = await createGit(fixture.path);
 
 				await git('add', ['data.json']);
 
-				const committing = aicommits(['--type', '']);
+				const committing = aicg(['--type', '']);
 
 				committing.stdout!.on('data', (buffer: Buffer) => {
 					const stdout = buffer.toString();
@@ -385,15 +385,15 @@ export default testSuite(({ describe }) => {
 
 		describe('proxy', ({ test }) => {
 			test('Fails on invalid proxy', async () => {
-				const { fixture, aicommits } = await createFixture({
+				const { fixture, aicg } = await createFixture({
 					...files,
-					'.aicommits': `${files['.aicommits']}\nproxy=http://localhost:1234`,
+					'.aicg': `${files['.aicg']}\nproxy=http://localhost:1234`,
 				});
 				const git = await createGit(fixture.path);
 
 				await git('add', ['data.json']);
 
-				const committing = aicommits([], {
+				const committing = aicg([], {
 					reject: false,
 				});
 
@@ -414,15 +414,15 @@ export default testSuite(({ describe }) => {
 			});
 
 			test('Connects with config', async () => {
-				const { fixture, aicommits } = await createFixture({
+				const { fixture, aicg } = await createFixture({
 					...files,
-					'.aicommits': `${files['.aicommits']}\nproxy=http://localhost:8888`,
+					'.aicg': `${files['.aicg']}\nproxy=http://localhost:8888`,
 				});
 				const git = await createGit(fixture.path);
 
 				await git('add', ['data.json']);
 
-				const committing = aicommits();
+				const committing = aicg();
 
 				committing.stdout!.on('data', (buffer: Buffer) => {
 					const stdout = buffer.toString();
@@ -453,12 +453,12 @@ export default testSuite(({ describe }) => {
 			});
 
 			test('Connects with env variable', async () => {
-				const { fixture, aicommits } = await createFixture(files);
+				const { fixture, aicg } = await createFixture(files);
 				const git = await createGit(fixture.path);
 
 				await git('add', ['data.json']);
 
-				const committing = aicommits([], {
+				const committing = aicg([], {
 					env: {
 						HTTP_PROXY: 'http://localhost:8888',
 					},

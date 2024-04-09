@@ -3,12 +3,12 @@ import { generateCommitMessage } from '../../../src/utils/openai.js';
 import type { ValidConfig } from '../../../src/utils/config.js';
 import { getDiff } from '../../utils.js';
 
-const { OPENAI_KEY } = process.env;
+const { GEMNIAPI_KEY } = process.env;
 
 export default testSuite(({ describe }) => {
-	if (!OPENAI_KEY) {
+	if (!GEMNIAPI_KEY) {
 		console.warn(
-			'⚠️  process.env.OPENAI_KEY is necessary to run these tests. Skipping...'
+			'⚠️  process.env.GEMNIAPI_KEY is necessary to run these tests. Skipping...'
 		);
 		return;
 	}
@@ -139,7 +139,7 @@ export default testSuite(({ describe }) => {
 				...configOverrides,
 			} as ValidConfig;
 			const commitMessages = await generateCommitMessage(
-				OPENAI_KEY!,
+				GEMNIAPI_KEY!,
 				'gpt-3.5-turbo',
 				config.locale,
 				gitDiff,

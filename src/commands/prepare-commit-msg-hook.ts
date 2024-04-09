@@ -27,7 +27,7 @@ export default () =>
 			return;
 		}
 
-		intro(bgCyan(black(' aicommits ')));
+		intro(bgCyan(black(' aicg ')));
 
 		const { env } = process;
 		const config = await getConfig({
@@ -40,7 +40,7 @@ export default () =>
 		let messages: string[];
 		try {
 			messages = await generateCommitMessage(
-				config.OPENAI_KEY,
+				config.GEMNIAPI_KEY,
 				config.model,
 				config.locale,
 				staged!.diff,

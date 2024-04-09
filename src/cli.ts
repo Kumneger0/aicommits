@@ -1,17 +1,15 @@
 import { cli } from 'cleye';
 import { description, version } from '../package.json';
-import aicommits from './commands/aicommits.js';
+import aicg from './commands/aicg.js';
 import prepareCommitMessageHook from './commands/prepare-commit-msg-hook.js';
 import configCommand from './commands/config.js';
 import hookCommand, { isCalledFromGitHook } from './commands/hook.js';
 
 const rawArgv = process.argv.slice(2);
 
-console.log('some new change');
-
 cli(
 	{
-		name: 'aicommits',
+		name: 'aicg',
 
 		version,
 
@@ -58,7 +56,7 @@ cli(
 		if (isCalledFromGitHook) {
 			prepareCommitMessageHook();
 		} else {
-			aicommits(
+			aicg(
 				argv.flags.generate,
 				argv.flags.exclude,
 				argv.flags.all,

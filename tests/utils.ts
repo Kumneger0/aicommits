@@ -7,16 +7,16 @@ import {
 	type FsFixture,
 } from 'fs-fixture';
 
-const aicommitsPath = path.resolve('./dist/cli.mjs');
+const aicgPath = path.resolve('./dist/cli.mjs');
 
-const createAicommits = (fixture: FsFixture) => {
+const createaicg = (fixture: FsFixture) => {
 	const homeEnv = {
 		HOME: fixture.path, // Linux
 		USERPROFILE: fixture.path, // Windows
 	};
 
 	return (args?: string[], options?: Options) =>
-		execaNode(aicommitsPath, args, {
+		execaNode(aicgPath, args, {
 			cwd: fixture.path,
 			...options,
 			extendEnv: false,
@@ -50,16 +50,16 @@ export const createGit = async (cwd: string) => {
 
 export const createFixture = async (source?: string | FileTree) => {
 	const fixture = await createFixtureBase(source);
-	const aicommits = createAicommits(fixture);
+	const aicg = createaicg(fixture);
 
 	return {
 		fixture,
-		aicommits,
+		aicg,
 	};
 };
 
 export const files = Object.freeze({
-	'.aicommits': `OPENAI_KEY=${process.env.OPENAI_KEY}`,
+	'.aicg': `GEMNIAPI_KEY=${process.env.GEMNIAPI_KEY}`,
 	'data.json': Array.from(
 		{ length: 10 },
 		(_, i) => `${i}. Lorem ipsum dolor sit amet`
@@ -67,9 +67,9 @@ export const files = Object.freeze({
 });
 
 export const assertOpenAiToken = () => {
-	if (!process.env.OPENAI_KEY) {
+	if (!process.env.GEMNIAPI_KEY) {
 		throw new Error(
-			'⚠️  process.env.OPENAI_KEY is necessary to run these tests. Skipping...'
+			'⚠️  process.env.GEMNIAPI_KEY is necessary to run these tests. Skipping...'
 		);
 	}
 };

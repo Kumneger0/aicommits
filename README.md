@@ -4,7 +4,7 @@
     <h1 align="center">AI Commits</h1>
   </div>
 	<p>A CLI that writes your git commit messages for you with AI. Never write a commit message again.</p>
-	<a href="https://www.npmjs.com/package/aicommits"><img src="https://img.shields.io/npm/v/aicommits" alt="Current version"></a>
+	<a href="https://www.npmjs.com/package/aicg"><img src="https://img.shields.io/npm/v/aicg" alt="Current version"></a>
 </div>
 
 ---
@@ -13,89 +13,89 @@
 
 > The minimum supported version of Node.js is the latest v14. Check your Node.js version with `node --version`.
 
-1. Install _aicommits_:
+1. Install _aicg_:
 
    ```sh
-   npm install -g aicommits
+   npm install -g aicg
    ```
 
-2. Retrieve your API key from [OpenAI](https://platform.openai.com/account/api-keys)
+2. Retrieve your API key from [GOOGLE](https://aistudio.google.com)
 
    > Note: If you haven't already, you'll have to create an account and set up billing.
 
-3. Set the key so aicommits can use it:
+3. Set the key so aicg can use it:
 
    ```sh
-   aicommits config set OPENAI_KEY=<your token>
+   aicg config set GEMNIAPI_KEY=<your token>
    ```
 
-   This will create a `.aicommits` file in your home directory.
+   This will create a `.aicg` file in your home directory.
 
 ### Upgrading
 
 Check the installed version with:
 
 ```
-aicommits --version
+aicg --version
 ```
 
-If it's not the [latest version](https://github.com/Nutlope/aicommits/releases/latest), run:
+If it's not the [latest version](https://github.com/Nutlope/aicg/releases/latest), run:
 
 ```sh
-npm update -g aicommits
+npm update -g aicg
 ```
 
 ## Usage
 
 ### CLI mode
 
-You can call `aicommits` directly to generate a commit message for your staged changes:
+You can call `aicg` directly to generate a commit message for your staged changes:
 
 ```sh
 git add <files...>
-aicommits
+aicg
 ```
 
-`aicommits` passes down unknown flags to `git commit`, so you can pass in [`commit` flags](https://git-scm.com/docs/git-commit).
+`aicg` passes down unknown flags to `git commit`, so you can pass in [`commit` flags](https://git-scm.com/docs/git-commit).
 
 For example, you can stage all changes in tracked files with as you commit:
 
 ```sh
-aicommits --all # or -a
+aicg --all # or -a
 ```
 
-> 👉 **Tip:** Use the `aic` alias if `aicommits` is too long for you.
+> 👉 **Tip:** Use the `aic` alias if `aicg` is too long for you.
 
 #### Generate multiple recommendations
 
 Sometimes the recommended commit message isn't the best so you want it to generate a few to pick from. You can generate multiple commit messages at once by passing in the `--generate <i>` flag, where 'i' is the number of generated messages:
 
 ```sh
-aicommits --generate <i> # or -g <i>
+aicg --generate <i> # or -g <i>
 ```
 
 > Warning: this uses more tokens, meaning it costs more.
 
 #### Generating Conventional Commits
 
-If you'd like to generate [Conventional Commits](https://conventionalcommits.org/), you can use the `--type` flag followed by `conventional`. This will prompt `aicommits` to format the commit message according to the Conventional Commits specification:
+If you'd like to generate [Conventional Commits](https://conventionalcommits.org/), you can use the `--type` flag followed by `conventional`. This will prompt `aicg` to format the commit message according to the Conventional Commits specification:
 
 ```sh
-aicommits --type conventional # or -t conventional
+aicg --type conventional # or -t conventional
 ```
 
 This feature can be useful if your project follows the Conventional Commits standard or if you're using tools that rely on this commit format.
 
 ### Git hook
 
-You can also integrate _aicommits_ with Git via the [`prepare-commit-msg`](https://git-scm.com/docs/githooks#_prepare_commit_msg) hook. This lets you use Git like you normally would, and edit the commit message before committing.
+You can also integrate _aicg_ with Git via the [`prepare-commit-msg`](https://git-scm.com/docs/githooks#_prepare_commit_msg) hook. This lets you use Git like you normally would, and edit the commit message before committing.
 
 #### Install
 
 In the Git repository you want to install the hook in:
 
 ```sh
-aicommits hook install
+aicg hook install
 ```
 
 #### Uninstall
@@ -103,7 +103,7 @@ aicommits hook install
 In the Git repository you want to uninstall the hook from:
 
 ```sh
-aicommits hook uninstall
+aicg hook uninstall
 ```
 
 #### Usage
@@ -117,7 +117,7 @@ aicommits hook uninstall
 
    > If you ever want to write your own message instead of generating one, you can simply pass one in: `git commit -m "My message"`
 
-2. Aicommits will generate the commit message for you and pass it back to Git. Git will open it with the [configured editor](https://docs.github.com/en/get-started/getting-started-with-git/associating-text-editors-with-git) for you to review/edit it.
+2. aicg will generate the commit message for you and pass it back to Git. Git will open it with the [configured editor](https://docs.github.com/en/get-started/getting-started-with-git/associating-text-editors-with-git) for you to review/edit it.
 
 3. Save and close the editor to commit!
 
@@ -128,19 +128,19 @@ aicommits hook uninstall
 To retrieve a configuration option, use the command:
 
 ```sh
-aicommits config get <key>
+aicg config get <key>
 ```
 
 For example, to retrieve the API key, you can use:
 
 ```sh
-aicommits config get OPENAI_KEY
+aicg config get GEMNIAPI_KEY
 ```
 
 You can also retrieve multiple configuration options at once by separating them with spaces:
 
 ```sh
-aicommits config get OPENAI_KEY generate
+aicg config get GEMNIAPI_KEY generate
 ```
 
 ### Setting a configuration value
@@ -148,28 +148,28 @@ aicommits config get OPENAI_KEY generate
 To set a configuration option, use the command:
 
 ```sh
-aicommits config set <key>=<value>
+aicg config set <key>=<value>
 ```
 
 For example, to set the API key, you can use:
 
 ```sh
-aicommits config set OPENAI_KEY=<your-api-key>
+aicg config set GEMNIAPI_KEY=<your-api-key>
 ```
 
 You can also set multiple configuration options at once by separating them with spaces, like
 
 ```sh
-aicommits config set OPENAI_KEY=<your-api-key> generate=3 locale=en
+aicg config set GEMNIAPI_KEY=<your-api-key> generate=3 locale=en
 ```
 
 ### Options
 
-#### OPENAI_KEY
+#### GEMNIAPI_KEY
 
 Required
 
-The OpenAI API key. You can retrieve it from [OpenAI API Keys page](https://platform.openai.com/account/api-keys).
+The GEMNI API key. You can retrieve it from [GEMNI API Keys page](https://aistudio.google.com).
 
 #### locale
 
@@ -192,7 +192,7 @@ Set a HTTP/HTTPS proxy to use for requests.
 To clear the proxy option, you can use the command (note the empty value after the equals sign):
 
 ```sh
-aicommits config set proxy=
+aicg config set proxy=
 ```
 
 #### model
@@ -205,12 +205,12 @@ The Chat Completions (`/v1/chat/completions`) model to use. Consult the list of 
 
 #### timeout
 
-The timeout for network requests to the OpenAI API in milliseconds.
+The timeout for network requests to the GEMNI API in milliseconds.
 
 Default: `10000` (10 seconds)
 
 ```sh
-aicommits config set timeout=20000 # 20s
+aicg config set timeout=20000 # 20s
 ```
 
 #### max-length
@@ -220,7 +220,7 @@ The maximum character length of the generated commit message.
 Default: `50`
 
 ```sh
-aicommits config set max-length=100
+aicg config set max-length=100
 ```
 
 #### type
@@ -230,13 +230,13 @@ Default: `""` (Empty string)
 The type of commit message to generate. Set this to "conventional" to generate commit messages that follow the Conventional Commits specification:
 
 ```sh
-aicommits config set type=conventional
+aicg config set type=conventional
 ```
 
 You can clear this option by setting it to an empty string:
 
 ```sh
-aicommits config set type=
+aicg config set type=
 ```
 
 ## How it works
@@ -253,4 +253,4 @@ Video coming soon where I rebuild it from scratch to show you how to easily buil
 
 ## Contributing
 
-If you want to help fix a bug or implement a feature in [Issues](https://github.com/Nutlope/aicommits/issues), checkout the [Contribution Guide](CONTRIBUTING.md) to learn how to setup and test the project
+If you want to help fix a bug or implement a feature in [Issues](https://github.com/Nutlope/aicg/issues), checkout the [Contribution Guide](CONTRIBUTING.md) to learn how to setup and test the project

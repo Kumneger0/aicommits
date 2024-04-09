@@ -59,7 +59,7 @@ const httpsPost = async (hostname: string, path: string, json: unknown) =>
 			request.destroy();
 			reject(
 				new KnownError(
-					`Time out error: request took over ms. Try increasing the \`timeout\` config, or checking the OpenAI API status https://status.openai.com`
+					`Time out error: request took over ms. Try increasing the \`timeout\` config, or checking the GEMNI API status https://status.openai.com`
 				)
 			);
 		});
@@ -68,10 +68,10 @@ const httpsPost = async (hostname: string, path: string, json: unknown) =>
 		request.end();
 	});
 
-const createChatCompletion = async (json: Object) => {
+const createChatCompletion = async (apikey: string, json: Object) => {
 	const { response, data } = await httpsPost(
 		'generativelanguage.googleapis.com',
-		'/v1beta/models/gemini-pro:generateContent?key=AIzaSyC8yDhnaSAL0t8vpaL38ZZXqzpAS5U3dVM',
+		`/v1beta/models/gemini-pro:generateContent?key=${apikey}`,
 		json
 	);
 
@@ -80,7 +80,7 @@ const createChatCompletion = async (json: Object) => {
 		response.statusCode < 200 ||
 		response.statusCode > 299
 	) {
-		let errorMessage = `OpenAI API Error: ${response.statusCode} - ${response.statusMessage}`;
+		let errorMessage = `GEMNI API Error: ${response.statusCode} - ${response.statusMessage}`;
 
 		if (data) {
 			errorMessage += `\n\n${data}`;
@@ -133,7 +133,7 @@ export const generateCommitMessage = async (
 	proxy?: string
 ) => {
 	try {
-		const completion = await createChatCompletion({
+		const completion = await createChatCompletion(apiKey, {
 			model,
 			contents: [
 				{
