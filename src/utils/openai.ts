@@ -153,6 +153,8 @@ export const generateCommitMessage = async (
 			.map(({ content }) => content?.parts?.map(({ text }) => text))
 			.flat();
 
+		console.log(messages);
+
 		return deduplicateMessages(messages);
 	} catch (error) {
 		const errorAsAny = error as any;
