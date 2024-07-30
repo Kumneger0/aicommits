@@ -5,6 +5,10 @@ import type { CommitType } from './config.js';
 import { KnownError } from './error.js';
 import { generatePrompt } from './prompt.js';
 
+import Groq from 'groq-sdk';
+import { getGroqChatCompletion } from './groq.js';
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 interface Candidate {
 	content: {
 		parts: {
@@ -104,23 +108,6 @@ const sanitizeMessage = (message: string) =>
 
 const deduplicateMessages = (array: string[]) => Array.from(new Set(array));
 
-// const generateStringFromLength = (length: number) => {
-// 	let result = '';
-// 	const highestTokenChar = 'z';
-// 	for (let i = 0; i < length; i += 1) {
-// 		result += highestTokenChar;
-// 	}
-// 	return result;
-// };
-
-// const getTokens = (prompt: string, model: TiktokenModel) => {
-// 	const encoder = encoding_for_model(model);
-// 	const tokens = encoder.encode(prompt).length;
-// 	// Free the encoder to avoid possible memory leaks.
-// 	encoder.free();
-// 	return tokens;
-// };
-
 export const generateCommitMessage = async (
 	apiKey: string,
 	model: TiktokenModel,
@@ -133,25 +120,38 @@ export const generateCommitMessage = async (
 	proxy?: string
 ) => {
 	try {
-		const completion = await createChatCompletion(apiKey, {
-			model,
-			contents: [
-				{
-					parts: [
-						{
-							text: generatePrompt(locale, maxLength, type),
-						},
-						{
-							text: diff,
-						},
-					],
-				},
-			],
-		});
+		// const completion = await createChatCompletion(apiKey, {
+		// 	model,
+		// 	contents: [
+		// 		{
+		// 			parts: [
+		// 				{
+		// 					text: generatePrompt(locale, maxLength, type),
+		// 				},
+		// 				{
+		// 					text: diff,
+		// 				},
+		// 			],
+		// 		},
+		// 	],
+		// });
 
-		const messages = completion.candidates
-			.map(({ content }) => content?.parts?.map(({ text }) => text))
-			.flat();
+		const completios2 = await getGroqChatCompletion(
+			[
+				{ content: generatePrompt(locale, maxLength, type), role: 'assistant' },
+				{ role: 'assistant', content: diff },
+			],
+			'llama3-8b-8192'
+		);
+
+		if (!completios2.choices.length) {
+			console.error('failed to generate commit messages please try agin');
+			process.exit(1);
+		}
+
+		const messages = completios2.choices?.map(
+			({ message }) => message.content as string
+		);
 
 		return deduplicateMessages(messages);
 	} catch (error) {

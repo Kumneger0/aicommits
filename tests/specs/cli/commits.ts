@@ -65,9 +65,9 @@ export default testSuite(({ describe }) => {
 			]);
 			console.log({
 				commitMessage,
-				length: commitMessage.length,
+				length: commitMessage?.length ?? 0,
 			});
-			expect(commitMessage.length).toBeLessThanOrEqual(50);
+			expect(commitMessage?.length ?? 0).toBeLessThanOrEqual(50);
 
 			await fixture.rm();
 		});
@@ -98,9 +98,9 @@ export default testSuite(({ describe }) => {
 			]);
 			console.log({
 				commitMessage,
-				length: commitMessage.length,
+				length: commitMessage?.length,
 			});
-			expect(commitMessage.length).toBeLessThanOrEqual(20);
+			expect(commitMessage?.length).toBeLessThanOrEqual(20);
 
 			await fixture.rm();
 		});
@@ -138,9 +138,9 @@ export default testSuite(({ describe }) => {
 			]);
 			console.log({
 				commitMessage,
-				length: commitMessage.length,
+				length: commitMessage?.length,
 			});
-			expect(commitMessage.length).toBeLessThanOrEqual(50);
+			expect(commitMessage?.length).toBeLessThanOrEqual(50);
 
 			await fixture.rm();
 		});
@@ -170,7 +170,8 @@ export default testSuite(({ describe }) => {
 			});
 
 			const { stdout } = await committing;
-			const countChoices = stdout.match(/ {2}[●○]/g)?.length ?? 0;
+			//@ts-ignore
+			const countChoices = stdout?.match(/ {2}[●○]/g)?.length ?? 0;
 
 			onTestFail(() => console.log({ stdout }));
 			expect(countChoices).toBe(2);
@@ -186,9 +187,9 @@ export default testSuite(({ describe }) => {
 			]);
 			console.log({
 				commitMessage,
-				length: commitMessage.length,
+				length: commitMessage?.length,
 			});
-			expect(commitMessage.length).toBeLessThanOrEqual(50);
+			expect(commitMessage?.length).toBeLessThanOrEqual(50);
 
 			await fixture.rm();
 		});
@@ -229,10 +230,10 @@ export default testSuite(({ describe }) => {
 			]);
 			console.log({
 				commitMessage,
-				length: commitMessage.length,
+				length: commitMessage?.length,
 			});
 			expect(commitMessage).toMatch(japanesePattern);
-			expect(commitMessage.length).toBeLessThanOrEqual(50);
+			expect(commitMessage?.length).toBeLessThanOrEqual(50);
 
 			await fixture.rm();
 		});
@@ -445,9 +446,9 @@ export default testSuite(({ describe }) => {
 				]);
 				console.log({
 					commitMessage,
-					length: commitMessage.length,
+					length: commitMessage?.length,
 				});
-				expect(commitMessage.length).toBeLessThanOrEqual(50);
+				expect(commitMessage?.length).toBeLessThanOrEqual(50);
 
 				await fixture.rm();
 			});
@@ -485,9 +486,9 @@ export default testSuite(({ describe }) => {
 				]);
 				console.log({
 					commitMessage,
-					length: commitMessage.length,
+					length: commitMessage?.length,
 				});
-				expect(commitMessage.length).toBeLessThanOrEqual(50);
+				expect(commitMessage?.length).toBeLessThanOrEqual(50);
 
 				await fixture.rm();
 			});

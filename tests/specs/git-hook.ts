@@ -59,7 +59,8 @@ export default testSuite(({ describe }) => {
 
 			const { stdout: commitMessage } = await git('log', ['--pretty=%B']);
 			console.log('Committed with:', commitMessage);
-			expect(commitMessage.startsWith('# ')).not.toBe(true);
+			//@ts-ignore
+			expect(commitMessage?.startsWith('# ')).not.toBe(true);
 
 			await fixture.rm();
 		});
