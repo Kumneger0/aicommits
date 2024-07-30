@@ -24,7 +24,7 @@ export default command(
 		(async () => {
 			const { mode } = argv._;
 
-			if (mode === 'ls') {
+			if (mode === 'select') {
 				const config = await getConfig(
 					{ GROQ_API_KEY: process.env.GROQ_API_KEY },
 					true
@@ -43,9 +43,8 @@ export default command(
 					throw new KnownError('No models found.');
 				}
 				const message = 'Select Your Prefferd Model';
-				log.info(message);
 				const selectedModelID = await select({
-					message: 'models you can use',
+					message,
 					options: models.data.map((model) => {
 						return {
 							label: `${model.id} by ${model.owned_by}`,
@@ -53,6 +52,7 @@ export default command(
 						};
 					}),
 				});
+				if (!selectedModelID) return;
 				await setConfigs([['AICG_MODEL', String(selectedModelID)]]);
 			} else {
 				throw new KnownError(`Invalid mode: ${mode}`);

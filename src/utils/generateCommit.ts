@@ -16,9 +16,6 @@ export const generateCommitMessage = async (
 	type: CommitType
 ) => {
 	try {
-
-  console.log(model);
-
 		const completios2 = await getGroqChatCompletion(
 			GROQ_API_KEY,
 			[
@@ -38,8 +35,6 @@ export const generateCommitMessage = async (
 		const messages = completios2.choices?.map(
 			({ message }) => message.content as string
 		);
-
-		console.log(messages);
 
 		return deduplicateMessages(messages);
 	} catch (error) {

@@ -39,7 +39,7 @@ Check the installed version with:
 aicg --version
 ```
 
-If it's not the [latest version](https://github.com/Nutlope/aicg/releases/latest), run:
+If it's not the [latest version](https://github.com/Kumneger0/aicommits/releases/latest), run:
 
 ```sh
 npm update -g aicg
@@ -169,7 +169,7 @@ aicg config set GROQ_API_KEY=<your-api-key> generate=3 locale=en
 
 Required
 
-The GEMNI API key. You can retrieve it from [GEMNI API Keys page](https://aistudio.google.com).
+The GROQ API key. You can retrieve it from [GROQ API Keys page](https://console.groq.com/keys).
 
 #### locale
 
@@ -199,16 +199,23 @@ aicg config set proxy=
 
 Default: `mixtral-8x7b-32768`
 
-The Model To use to generate commit messages you can view available models using the following command
+Use the following command to select different models with aicg and save the selection:
 
-```
-aicg models 
+```sh
+aicg models select
 ```
 
+This command configures and saves your selection so when you run aicg next time, it will use the selected model.
+
+Alternatively, you can override the selected model for a specific time using:
+
+```sh
+aicg -k <model-id>
+```
 
 #### timeout
 
-The timeout for network requests to the GEMNI API in milliseconds.
+The timeout for network requests in milliseconds.
 
 Default: `10000` (10 seconds)
 
@@ -244,7 +251,7 @@ aicg config set type=
 
 ## How it works
 
-This CLI tool runs `git diff` to grab all your latest code changes, sends them to OpenAI's GPT-3, then returns the AI generated commit message.
+This CLI tool runs `git diff` to grab all your latest code changes, sends them to GROQ, then returns the AI generated commit message.
 
 Video coming soon where I rebuild it from scratch to show you how to easily build your own CLI tools powered by AI.
 
