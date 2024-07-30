@@ -28,12 +28,10 @@ export default command(
 				const groq = new Groq({ apiKey: config.GROQ_API_KEY });
 				const modles = await groq.models.list();
 
-				const modeldI = modles.data.map((model) => {
-					return model.id;
+				const models = modles.data.map((model) => {
+					return `${model.owned_by} - ${model.id}`;
 				});
-
-				console.log(modeldI);
-
+				console.log(models);
 				return;
 			}
 
