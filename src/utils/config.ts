@@ -1,10 +1,9 @@
 import fs from 'fs/promises';
-import path from 'path';
-import os from 'os';
 import ini from 'ini';
-import type { TiktokenModel } from '@dqbd/tiktoken';
-import { fileExists } from './fs.js';
+import os from 'os';
+import path from 'path';
 import { KnownError } from './error.js';
+import { fileExists } from './fs.js';
 
 const commitTypes = ['', 'conventional'] as const;
 
@@ -21,16 +20,16 @@ const parseAssert = (name: string, condition: any, message: string) => {
 };
 
 const configParsers = {
-	GEMNIAPI_KEY(key?: string) {
+	GROQ_API_KEY: (key?: string) => {
 		if (!key) {
 			throw new KnownError(
-				'Please set your GEMNI API key via `aicg config set GEMNIAPI_KEY=<your token>`'
+				'Please set your GROQ API key via `aicg config set GROQ_API_KEY=<your API key>`'
 			);
 		}
-		// parseAssert('GEMNIAPI_KEY', key.startsWith('sk-'), 'Must start with "sk-"');
-		// Key can range from 43~51 characters. There's no spec to assert this.
-
 		return key;
+	},
+	AICG_MODEL(key?: string) {
+		return key ?? 'mixtral-8x7b-32768';
 	},
 	locale(locale?: string) {
 		if (!locale) {
@@ -80,13 +79,7 @@ const configParsers = {
 
 		return url;
 	},
-	model(model?: string) {
-		if (!model || model.length === 0) {
-			return 'gpt-3.5-turbo';
-		}
 
-		return model as TiktokenModel;
-	},
 	timeout(timeout?: string) {
 		if (!timeout) {
 			return 10_000;

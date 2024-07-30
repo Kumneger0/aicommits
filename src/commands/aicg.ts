@@ -14,7 +14,7 @@ import {
 	getDetectedMessage,
 } from '../utils/git.js';
 import { getConfig } from '../utils/config.js';
-import { generateCommitMessage } from '../utils/openai.js';
+import { generateCommitMessage } from '../utils/generateCommit.js';
 import { KnownError, handleCliError } from '../utils/error.js';
 
 export default async (
@@ -22,6 +22,7 @@ export default async (
 	excludeFiles: string[],
 	stageAll: boolean,
 	commitType: string | undefined,
+	model: string | undefined,
 	rawArgv: string[]
 ) =>
 	(async () => {
@@ -53,7 +54,8 @@ export default async (
 
 		const { env } = process;
 		const config = await getConfig({
-			GEMNIAPI_KEY: env.GEMNIAPI_KEY || env.OPENAI_API_KEY,
+			GROQ_API_KEY: env.GROQ_API_KEY,
+			AICG_MODEL: env.AICG_MODEL,
 			proxy:
 				env.https_proxy || env.HTTPS_PROXY || env.http_proxy || env.HTTP_PROXY,
 			generate: generate?.toString(),
@@ -65,15 +67,12 @@ export default async (
 		let messages: string[];
 		try {
 			messages = await generateCommitMessage(
-				config.GEMNIAPI_KEY,
-				config.model,
+				config?.GROQ_API_KEY,
+				model ?? config.AICG_MODEL,
 				config.locale,
 				staged.diff,
-				config.generate,
 				config['max-length'],
-				config.type,
-				config.timeout,
-				config.proxy
+				config.type
 			);
 		} finally {
 			s.stop('Changes analyzed');

@@ -4,6 +4,7 @@ import aicg from './commands/aicg.js';
 import prepareCommitMessageHook from './commands/prepare-commit-msg-hook.js';
 import configCommand from './commands/config.js';
 import hookCommand, { isCalledFromGitHook } from './commands/hook.js';
+import modelsCommand from './commands/models.js';
 
 const rawArgv = process.argv.slice(2);
 
@@ -42,9 +43,14 @@ cli(
 				description: 'Type of commit message to generate',
 				alias: 't',
 			},
+			model: {
+				type: String,
+				description: 'Specify Model',
+				alias: 'k',
+			},
 		},
 
-		commands: [configCommand, hookCommand],
+		commands: [configCommand, hookCommand, modelsCommand],
 
 		help: {
 			description,
@@ -54,13 +60,14 @@ cli(
 	},
 	(argv) => {
 		if (isCalledFromGitHook) {
-			prepareCommitMessageHook();
+			prepareCommitMessageHook(argv.flags.model);
 		} else {
 			aicg(
 				argv.flags.generate,
 				argv.flags.exclude,
 				argv.flags.all,
 				argv.flags.type,
+				argv.flags.model,
 				rawArgv
 			);
 		}

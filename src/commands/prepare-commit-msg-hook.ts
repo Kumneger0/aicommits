@@ -3,12 +3,12 @@ import { intro, outro, spinner } from '@clack/prompts';
 import { black, green, red, bgCyan } from 'kolorist';
 import { getStagedDiff } from '../utils/git.js';
 import { getConfig } from '../utils/config.js';
-import { generateCommitMessage } from '../utils/openai.js';
+import { generateCommitMessage } from '../utils/generateCommit.js';
 import { KnownError, handleCliError } from '../utils/error.js';
 
 const [messageFilePath, commitSource] = process.argv.slice(2);
 
-export default () =>
+export default (model?: string) =>
 	(async () => {
 		if (!messageFilePath) {
 			throw new KnownError(
@@ -31,6 +31,7 @@ export default () =>
 
 		const { env } = process;
 		const config = await getConfig({
+			AICG_MODEL: env.AICG_MODEL,
 			proxy:
 				env.https_proxy || env.HTTPS_PROXY || env.http_proxy || env.HTTP_PROXY,
 		});
@@ -40,15 +41,12 @@ export default () =>
 		let messages: string[];
 		try {
 			messages = await generateCommitMessage(
-				config.GEMNIAPI_KEY,
-				config.model,
+				config?.GROQ_API_KEY,
+				model ?? config.AICG_MODEL,
 				config.locale,
-				staged!.diff,
-				config.generate,
+				staged.diff,
 				config['max-length'],
-				config.type,
-				config.timeout,
-				config.proxy
+				config.type
 			);
 		} finally {
 			s.stop('Changes analyzed');

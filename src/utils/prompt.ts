@@ -41,15 +41,19 @@ const commitTypes: Record<CommitType, string> = {
 export const generatePrompt = (
 	locale: string,
 	maxLength: number,
-	type: CommitType
+	type: CommitType,
+	diff: string
 ) =>
 	[
-		'Generate a concise git commit message written in present tense for the following code diff with the given specifications below:',
-		`Message language: ${locale}`,
-		`Commit message must be a maximum of ${maxLength} characters.`,
-		'Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit.',
-		commitTypes[type],
-		specifyCommitFormat(type),
+		'Generate a concise git commit message in present tense for the following code diff:',
+		`Language: ${locale}`,
+		`Maximum length: ${maxLength} characters`,
+		`Type: ${commitTypes[type]}`,
+		`Format: ${specifyCommitFormat(type)}`,
+		'Warning: Only provide the commit message. Exclude all other information.',
+		"Do not include any text like 'Here is a concise git commit message'. The response will be directly given to git commit.",
+		`Here is the output from git diff: ${diff}`,
 	]
+
 		.filter(Boolean)
 		.join('\n');

@@ -1,5 +1,5 @@
 import { expect, testSuite } from 'manten';
-import { generateCommitMessage } from '../../../src/utils/openai.js';
+import { generateCommitMessage } from '../../../src/utils/generateCommit.js';
 import type { ValidConfig } from '../../../src/utils/config.js';
 import { getDiff } from '../../utils.js';
 
