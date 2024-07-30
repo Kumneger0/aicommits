@@ -1,6 +1,6 @@
 {
 	"name": "aicg",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "Writes your git commit messages for you with AI",
 	"keywords": [
 		"ai",
