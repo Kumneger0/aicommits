@@ -19,14 +19,14 @@
    npm install -g aicg
    ```
 
-2. Retrieve your API key from [GOOGLE](https://aistudio.google.com)
+2. Retrieve your API key from [GROQ](https://console.groq.com/keys)
 
    > Note: If you haven't already, you'll have to create an account and set up billing.
 
 3. Set the key so aicg can use it:
 
    ```sh
-   aicg config set GEMNIAPI_KEY=<your token>
+   aicg config set GROQ_API_KEY=<your token>
    ```
 
    This will create a `.aicg` file in your home directory.
@@ -134,13 +134,13 @@ aicg config get <key>
 For example, to retrieve the API key, you can use:
 
 ```sh
-aicg config get GEMNIAPI_KEY
+aicg config get GROQ_API_KEY
 ```
 
 You can also retrieve multiple configuration options at once by separating them with spaces:
 
 ```sh
-aicg config get GEMNIAPI_KEY generate
+aicg config get GROQ_API_KEY generate
 ```
 
 ### Setting a configuration value
@@ -154,18 +154,18 @@ aicg config set <key>=<value>
 For example, to set the API key, you can use:
 
 ```sh
-aicg config set GEMNIAPI_KEY=<your-api-key>
+aicg config set GROQ_API_KEY=<your-api-key>
 ```
 
 You can also set multiple configuration options at once by separating them with spaces, like
 
 ```sh
-aicg config set GEMNIAPI_KEY=<your-api-key> generate=3 locale=en
+aicg config set GROQ_API_KEY=<your-api-key> generate=3 locale=en
 ```
 
 ### Options
 
-#### GEMNIAPI_KEY
+#### GROQ_API_KEY
 
 Required
 
@@ -197,11 +197,14 @@ aicg config set proxy=
 
 #### model
 
-Default: `gpt-3.5-turbo`
+Default: `mixtral-8x7b-32768`
 
-The Chat Completions (`/v1/chat/completions`) model to use. Consult the list of models available in the [OpenAI Documentation](https://platform.openai.com/docs/models/model-endpoint-compatibility).
+The Model To use to generate commit messages you can view available models using the following command
 
-> Tip: If you have access, try upgrading to [`gpt-4`](https://platform.openai.com/docs/models/gpt-4) for next-level code analysis. It can handle double the input size, but comes at a higher cost. Check out OpenAI's website to learn more.
+```
+aicg models 
+```
+
 
 #### timeout
 

@@ -16,6 +16,9 @@ export const generateCommitMessage = async (
 	type: CommitType
 ) => {
 	try {
+
+  console.log(model);
+
 		const completios2 = await getGroqChatCompletion(
 			GROQ_API_KEY,
 			[

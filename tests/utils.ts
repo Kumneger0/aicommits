@@ -59,7 +59,7 @@ export const createFixture = async (source?: string | FileTree) => {
 };
 
 export const files = Object.freeze({
-	'.aicg': `GEMNIAPI_KEY=${process.env.GEMNIAPI_KEY}`,
+	'.aicg': `GROQ_API_KEY=${process.env.GROQ_API_KEY}`,
 	'data.json': Array.from(
 		{ length: 10 },
 		(_, i) => `${i}. Lorem ipsum dolor sit amet`
@@ -67,9 +67,9 @@ export const files = Object.freeze({
 });
 
 export const assertOpenAiToken = () => {
-	if (!process.env.GEMNIAPI_KEY) {
+	if (!process.env.GROQ_API_KEY) {
 		throw new Error(
-			'⚠️  process.env.GEMNIAPI_KEY is necessary to run these tests. Skipping...'
+			'⚠️  process.env.GROQ_API_KEY is necessary to run these tests. Skipping...'
 		);
 	}
 };

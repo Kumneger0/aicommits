@@ -50,13 +50,13 @@ node ./dist/cli.mjs
 
 ## Testing
 
-Testing requires passing in `GEMNIAPI_KEY` as an environment variable:
+Testing requires passing in `GROQ_API_KEY` as an environment variable:
 
 ```sh
-GEMNIAPI_KEY=<your OPENAI key> pnpm test
+GROQ_API_KEY=<your OPENAI key> pnpm test
 ```
 
-You can still run tests that don't require `GEMNIAPI_KEY` but will not test the main functionality:
+You can still run tests that don't require `GROQ_API_KEY` but will not test the main functionality:
 
 ```
 pnpm test

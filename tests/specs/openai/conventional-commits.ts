@@ -3,12 +3,12 @@ import { generateCommitMessage } from '../../../src/utils/generateCommit.js';
 import type { ValidConfig } from '../../../src/utils/config.js';
 import { getDiff } from '../../utils.js';
 
-const { GEMNIAPI_KEY } = process.env;
+const { GROQ_API_KEY } = process.env;
 
 export default testSuite(({ describe }) => {
-	if (!GEMNIAPI_KEY) {
+	if (!GROQ_API_KEY) {
 		console.warn(
-			'⚠️  process.env.GEMNIAPI_KEY is necessary to run these tests. Skipping...'
+			'⚠️  process.env.GROQ_API_KEY is necessary to run these tests. Skipping...'
 		);
 		return;
 	}
@@ -139,7 +139,7 @@ export default testSuite(({ describe }) => {
 				...configOverrides,
 			} as ValidConfig;
 			const commitMessages = await generateCommitMessage(
-				GEMNIAPI_KEY!,
+				GROQ_API_KEY!,
 				'gpt-3.5-turbo',
 				config.locale,
 				gitDiff,

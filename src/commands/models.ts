@@ -1,13 +1,23 @@
 import { command } from 'cleye';
 import Groq from 'groq-sdk';
 import { red } from 'kolorist';
-import { getConfig } from '../utils/config.js';
+import { getConfig, setConfigs } from '../utils/config.js';
 import { KnownError, handleCliError } from '../utils/error.js';
+import { select, log } from '@clack/prompts';
+
+const getMaxWidth = (
+	data: Groq.Models.Model[],
+	key: keyof Groq.Models.Model
+) => {
+	return Math.max(
+		...data.map((item) => String(item[key]).length),
+		key.length + 50
+	);
+};
 
 export default command(
 	{
 		name: 'models',
-
 		parameters: ['<mode>'],
 	},
 	(argv) => {
@@ -25,17 +35,28 @@ export default command(
 						'Please set your GROQ API key via `aicg config set GROQ_API_KEY=<your API key>`'
 					);
 				}
+
 				const groq = new Groq({ apiKey: config.GROQ_API_KEY });
-				const modles = await groq.models.list();
+				const models = await groq.models.list();
 
-				const models = modles.data.map((model) => {
-					return `${model.owned_by} - ${model.id}`;
+				if (!models.data.length) {
+					throw new KnownError('No models found.');
+				}
+				const message = 'Select Your Prefferd Model';
+				log.info(message);
+				const selectedModelID = await select({
+					message: 'models you can use',
+					options: models.data.map((model) => {
+						return {
+							label: `${model.id} by ${model.owned_by}`,
+							value: model.id,
+						};
+					}),
 				});
-				console.log(models);
-				return;
+				await setConfigs([['AICG_MODEL', String(selectedModelID)]]);
+			} else {
+				throw new KnownError(`Invalid mode: ${mode}`);
 			}
-
-			throw new KnownError(`Invalid mode: ${mode}`);
 		})().catch((error) => {
 			console.error(`${red('✖')} ${error.message}`);
 			handleCliError(error);

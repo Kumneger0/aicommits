@@ -43,7 +43,7 @@ jobs:
         tinyproxy
     - name: Test
       env:
-        GEMNIAPI_KEY: ${{ secrets.GEMNIAPI_KEY }}
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       run: |
         pnpm test
         pnpm --use-node-version=14.21.3 test

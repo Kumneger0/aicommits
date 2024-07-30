@@ -7,7 +7,7 @@ export default testSuite(({ describe }) => {
 	describe('config', async ({ test, describe }) => {
 		const { fixture, aicg } = await createFixture();
 		const configPath = path.join(fixture.path, '.aicg');
-		const openAiToken = 'GEMNIAPI_KEY=sk-abc';
+		const openAiToken = 'GROQ_API_KEY=sk-abc';
 
 		test('set unknown config file', async () => {
 			const { stderr } = await aicg(['config', 'set', 'UNKNOWN=1'], {
@@ -17,13 +17,13 @@ export default testSuite(({ describe }) => {
 			expect(stderr).toMatch('Invalid config property: UNKNOWN');
 		});
 
-		test('set invalid GEMNIAPI_KEY', async () => {
-			const { stderr } = await aicg(['config', 'set', 'GEMNIAPI_KEY=abc'], {
+		test('set invalid GROQ_API_KEY', async () => {
+			const { stderr } = await aicg(['config', 'set', 'GROQ_API_KEY=abc'], {
 				reject: false,
 			});
 
 			// expect(stderr).toMatch(
-			// 	'Invalid config property GEMNIAPI_KEY: Must start with "sk-"'
+			// 	'Invalid config property GROQ_API_KEY: Must start with "sk-"'
 			// );
 		});
 
@@ -35,7 +35,7 @@ export default testSuite(({ describe }) => {
 		});
 
 		await test('get config file', async () => {
-			const { stdout } = await aicg(['config', 'get', 'GEMNIAPI_KEY']);
+			const { stdout } = await aicg(['config', 'get', 'GROQ_API_KEY']);
 			expect(stdout).toBe(openAiToken);
 		});
 
@@ -111,7 +111,7 @@ export default testSuite(({ describe }) => {
 		});
 
 		await test('get config file', async () => {
-			const { stdout } = await aicg(['config', 'get', 'GEMNIAPI_KEY']);
+			const { stdout } = await aicg(['config', 'get', 'GROQ_API_KEY']);
 			expect(stdout).toBe(openAiToken);
 		});
 
