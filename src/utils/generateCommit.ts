@@ -14,67 +14,49 @@ export const generateCommitMessage = async (
 	maxLength: number,
 	type: CommitType
 ) => {
-	let previosCommists: string | string[] = '';
-	try {
-		if (diff && Array.isArray(diff)) {
-			for (let i in diff) {
-				const result = await getGroqChatCompletion(
-					GROQ_API_KEY,
-					[
-						{
-							content: generatePrompt(
-								locale,
-								maxLength,
-								type,
-								previosCommists as string
-							),
-							role: 'system',
-						},
-						{
-							role: 'user',
-							content: diff[i],
-						},
-					],
-					model
-				);
-				previosCommists =
-					Number(i) !== diff.length - 1
-						? (previosCommists += result.choices
-								?.map(({ message }) => message.content as string)
-								.join(''))
-						: result.choices?.map(({ message }) => message.content as string);
-			}
-
-			return Array.isArray(previosCommists)
-				? previosCommists
-				: [previosCommists];
-		}
-
+	let previousCommits: string = '';
+	const generateAndProcessResult = async (diffItem: string) => {
 		const result = await getGroqChatCompletion(
 			GROQ_API_KEY,
 			[
 				{
-					content: generatePrompt(locale, maxLength, type, previosCommists),
+					content: generatePrompt(locale, maxLength, type, previousCommits),
 					role: 'system',
 				},
 				{
 					role: 'user',
-					content: diff,
+					content: diffItem,
 				},
 			],
 			model
 		);
 
 		if (!result.choices.length) {
-			console.error('failed to generate commit messages please try agin');
+			console.error('Failed to generate commit messages. Please try again.');
 			process.exit(1);
 		}
 
-		const messages = result.choices?.map(
-			({ message }) => message.content as string
-		);
+		return result.choices
+			.map(({ message }) => message.content as string)
+			.join('');
+	};
 
-		return deduplicateMessages(messages);
+	try {
+		if (Array.isArray(diff)) {
+			for (const i in diff) {
+				const resultContent = await generateAndProcessResult(diff[i]);
+				if (Number(i) !== diff.length - 1) {
+					previousCommits += resultContent;
+				} else {
+					previousCommits = resultContent;
+				}
+			}
+
+			return [previousCommits];
+		} else {
+			const resultContent = await generateAndProcessResult(diff);
+			return deduplicateMessages([resultContent]);
+		}
 	} catch (error) {
 		const errorAsAny = error as any;
 		if (errorAsAny.code === 'ENOTFOUND') {

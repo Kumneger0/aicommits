@@ -36,8 +36,6 @@ export default command(
 			const hookExists = await fileExists(absoltueSymlinkPath);
 			if (mode === 'install') {
 				if (hookExists) {
-					// If the symlink is broken, it will throw an error
-					// eslint-disable-next-line @typescript-eslint/no-empty-function
 					const realpath = await fs
 						.realpath(absoltueSymlinkPath)
 						.catch(() => {});

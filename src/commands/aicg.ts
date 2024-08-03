@@ -1,25 +1,24 @@
+import { encoding_for_model } from '@dqbd/tiktoken';
 import { execa } from 'execa';
-import { get_encoding, encoding_for_model } from '@dqbd/tiktoken';
 
-import { black, dim, green, red, bgCyan } from 'kolorist';
 import {
-	intro,
-	outro,
-	spinner,
-	select,
 	confirm,
+	intro,
 	isCancel,
-	log,
+	outro,
+	select,
+	spinner,
 } from '@clack/prompts';
+import { bgCyan, black, dim, green, red } from 'kolorist';
+import { getConfig } from '../utils/config.js';
+import { KnownError, handleCliError } from '../utils/error.js';
+import { generateCommitMessage } from '../utils/generateCommit.js';
 import {
 	assertGitRepo,
-	getStagedDiff,
 	getDetectedMessage,
+	getStagedDiff,
 	getStagedDiffForEachFileSeparatly,
 } from '../utils/git.js';
-import { getConfig } from '../utils/config.js';
-import { generateCommitMessage } from '../utils/generateCommit.js';
-import { KnownError, handleCliError } from '../utils/error.js';
 import { models } from '../utils/models.js';
 
 export function getCurrentModelTotalSupportedToken(
@@ -29,8 +28,8 @@ export function getCurrentModelTotalSupportedToken(
 }
 
 export const calculateToken = (diff: string) => {
-	//TODO: use tiktoken to tokenize and calcuate the number of tokens may be not good option but untill i found good solutions lets use this
-	const encoder = encoding_for_model('gpt-3.5-turbo');
+	// TODO: try to find other appraoach to calculate the token this approach may not be a good option
+	const encoder = encoding_for_model('gpt-4');
 
 	const encoded = encoder.encode(diff);
 	const currentToken = encoded.length;
@@ -38,7 +37,6 @@ export const calculateToken = (diff: string) => {
 		currentToken, //
 	};
 };
-
 export function getOrganizedDiff(
 	diffs: {
 		diff: string;
@@ -46,21 +44,25 @@ export function getOrganizedDiff(
 	}[],
 	totalSupportedTokenByModel: number
 ) {
-	let tempDiff = '';
-	const diffsWillBeUsedForPrompt = [];
-	for (let i in diffs) {
-		const shuldAppednd =
-			diffs[i].token + (diffs[Number(i) + 1]?.token ?? 0) <
-			totalSupportedTokenByModel;
-		if (shuldAppednd) {
-			tempDiff += diffs[i].diff;
-		}
-		if (!shuldAppednd) {
-			diffsWillBeUsedForPrompt.push(tempDiff);
-			tempDiff = '';
+	console.log(diffs);
+
+	let tempDiff = [{ diff: '', token: 0 }];
+	let currentIndex = 0;
+
+	for (let i = 0; i < diffs.length; i++) {
+		const currentDiff = diffs[i];
+		const currentTokenCount = tempDiff[currentIndex].token + currentDiff.token;
+
+		if (currentTokenCount <= totalSupportedTokenByModel) {
+			tempDiff[currentIndex].diff += currentDiff.diff;
+			tempDiff[currentIndex].token += currentDiff.token;
+		} else {
+			tempDiff.push({ diff: currentDiff.diff, token: currentDiff.token });
+			currentIndex++;
 		}
 	}
-	return diffsWillBeUsedForPrompt;
+
+	return tempDiff.map(({ diff }) => diff);
 }
 
 export default async (
@@ -95,21 +97,34 @@ export default async (
 			model as (typeof models)[number]['id']
 		);
 
+		console.log('total supported token', totalSupportedTokenByModel);
+
 		const { currentToken } = calculateToken(staged?.diff);
+
+		console.log('currentToken', currentToken);
+
+		const isCurrentLargerThanSupportedToken =
+			currentToken > totalSupportedTokenByModel;
 
 		const eachDiffAlongWithToken = (
 			await getStagedDiffForEachFileSeparatly(excludeFiles)
-		)?.map(({ diff }) => {
-			return {
-				diff,
-				token: calculateToken(diff).currentToken,
-			};
+		)?.map((diff) => {
+			if (isCurrentLargerThanSupportedToken)
+				return {
+					diff: diff.diff,
+					token: calculateToken(diff.diff).currentToken,
+				};
+			return diff;
 		});
 
-		const diff =
-			currentToken > totalSupportedTokenByModel
-				? getOrganizedDiff(eachDiffAlongWithToken, totalSupportedTokenByModel)
-				: staged.diff;
+		const diff = isCurrentLargerThanSupportedToken
+			? getOrganizedDiff(
+					eachDiffAlongWithToken as { diff: string; token: number }[],
+					totalSupportedTokenByModel
+			  )
+			: staged.diff;
+
+		console.log('ffaljflaj', diff.length);
 
 		detectingFiles.stop(
 			`${getDetectedMessage(staged.files)}:\n${staged.files
