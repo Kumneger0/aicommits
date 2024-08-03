@@ -25,14 +25,22 @@ const filesToExclude = [
 	'*.lock',
 ].map(excludeFromDiff);
 
-export const getStagedDiff = async (excludeFiles?: string[]) => {
-	const diffCached = ['diff', '--cached', '--diff-algorithm=minimal'];
+export const getStagedFileNamesOnly = async (
+	diffCached: string[],
+	excludeFiles?: string[]
+) => {
 	const { stdout: files } = await execa('git', [
 		...diffCached,
 		'--name-only',
 		...filesToExclude,
 		...(excludeFiles ? excludeFiles.map(excludeFromDiff) : []),
 	]);
+	return files;
+};
+
+export const getStagedDiff = async (excludeFiles?: string[]) => {
+	const diffCached = ['diff', '--cached', '--diff-algorithm=minimal'];
+	const files = await getStagedFileNamesOnly(diffCached, excludeFiles);
 
 	if (!files) {
 		return;
@@ -48,6 +56,27 @@ export const getStagedDiff = async (excludeFiles?: string[]) => {
 		files: files.split('\n'),
 		diff,
 	};
+};
+
+export const getStagedDiffForEachFileSeparatly = async (
+	excludeFiles?: string[]
+) => {
+	const diffCached = ['diff', '--cached', '--diff-algorithm=minimal'];
+	const files = await getStagedFileNamesOnly(diffCached, excludeFiles);
+
+	if (!files) {
+		return [];
+	}
+
+	const stagedFilesArray = files.split('\n');
+
+	const stagedDiffArr = await Promise.all(
+		stagedFilesArray.map(async (file) => {
+			const { stdout: diff } = await execa('git', [...diffCached, file]);
+			return { filePath: file, diff };
+		})
+	);
+	return stagedDiffArr;
 };
 
 export const getDetectedMessage = (files: string[]) =>

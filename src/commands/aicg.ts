@@ -1,4 +1,6 @@
 import { execa } from 'execa';
+import { get_encoding, encoding_for_model } from '@dqbd/tiktoken';
+
 import { black, dim, green, red, bgCyan } from 'kolorist';
 import {
 	intro,
@@ -7,15 +9,59 @@ import {
 	select,
 	confirm,
 	isCancel,
+	log,
 } from '@clack/prompts';
 import {
 	assertGitRepo,
 	getStagedDiff,
 	getDetectedMessage,
+	getStagedDiffForEachFileSeparatly,
 } from '../utils/git.js';
 import { getConfig } from '../utils/config.js';
 import { generateCommitMessage } from '../utils/generateCommit.js';
 import { KnownError, handleCliError } from '../utils/error.js';
+import { models } from '../utils/models.js';
+
+export function getCurrentModelTotalSupportedToken(
+	modelID: (typeof models)[number]['id']
+) {
+	return models.find(({ id }) => modelID == id)?.context_window ?? 5000;
+}
+
+export const calculateToken = (diff: string) => {
+	//TODO: use tiktoken to tokenize and calcuate the number of tokens may be not good option but untill i found good solutions lets use this
+	const encoder = encoding_for_model('gpt-3.5-turbo');
+
+	const encoded = encoder.encode(diff);
+	const currentToken = encoded.length;
+	return {
+		currentToken, //
+	};
+};
+
+export function getOrganizedDiff(
+	diffs: {
+		diff: string;
+		token: number;
+	}[],
+	totalSupportedTokenByModel: number
+) {
+	let tempDiff = '';
+	const diffsWillBeUsedForPrompt = [];
+	for (let i in diffs) {
+		const shuldAppednd =
+			diffs[i].token + (diffs[Number(i) + 1]?.token ?? 0) <
+			totalSupportedTokenByModel;
+		if (shuldAppednd) {
+			tempDiff += diffs[i].diff;
+		}
+		if (!shuldAppednd) {
+			diffsWillBeUsedForPrompt.push(tempDiff);
+			tempDiff = '';
+		}
+	}
+	return diffsWillBeUsedForPrompt;
+}
 
 export default async (
 	generate: number | undefined,
@@ -45,6 +91,25 @@ export default async (
 				'No staged changes found. Stage your changes manually, or automatically stage all changes with the `--all` flag.'
 			);
 		}
+		const totalSupportedTokenByModel = getCurrentModelTotalSupportedToken(
+			model as (typeof models)[number]['id']
+		);
+
+		const { currentToken } = calculateToken(staged?.diff);
+
+		const eachDiffAlongWithToken = (
+			await getStagedDiffForEachFileSeparatly(excludeFiles)
+		)?.map(({ diff }) => {
+			return {
+				diff,
+				token: calculateToken(diff).currentToken,
+			};
+		});
+
+		const diff =
+			currentToken > totalSupportedTokenByModel
+				? getOrganizedDiff(eachDiffAlongWithToken, totalSupportedTokenByModel)
+				: staged.diff;
 
 		detectingFiles.stop(
 			`${getDetectedMessage(staged.files)}:\n${staged.files
@@ -70,7 +135,7 @@ export default async (
 				config?.GROQ_API_KEY,
 				model ?? config.AICG_MODEL,
 				config.locale,
-				staged.diff,
+				diff,
 				config['max-length'],
 				config.type
 			);

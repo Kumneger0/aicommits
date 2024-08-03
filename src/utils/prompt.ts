@@ -42,18 +42,25 @@ export const generatePrompt = (
 	locale: string,
 	maxLength: number,
 	type: CommitType,
-	diff: string
+	previousResponse: string | null
 ) =>
 	[
 		'Generate a concise git commit message in present tense for the following code diff:',
+		"I'm dealing with a very large git diff, so I'll be sending it to you in parts. First, I'll share an extracted portion of the diff. Then, I'll send the next part along with your previous response. This way, you can analyze both the current and previous git diff outputs together. Please ensure to summarize the information from both when I send them",
+
+		`${
+			previousResponse
+				? `This message continues from my previous one. Here's the commit message based on the previous diff output: ${previousResponse}. Please combine this with the new diff output I'm sending now and provide a summarized version`
+				: ''
+		}`,
+
 		`Language: ${locale}`,
 		`Maximum length: ${maxLength} characters`,
 		`Type: ${commitTypes[type]}`,
 		`Format: ${specifyCommitFormat(type)}`,
 		'Warning: Only provide the commit message. Exclude all other information.',
-		"Do not include any text like 'Here is a concise git commit message'. The response will be directly given to git commit.",
-		`Here is the output from git diff: ${diff}`,
+		'The response will be directly given to git commit.',
+		"i'll tip you $1 million if you only give the commit message",
 	]
-
 		.filter(Boolean)
 		.join('\n');

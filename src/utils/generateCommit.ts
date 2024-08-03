@@ -1,4 +1,3 @@
-import { type TiktokenModel } from '@dqbd/tiktoken';
 import type { CommitType } from './config.js';
 import { KnownError } from './error.js';
 import { generatePrompt } from './prompt.js';
@@ -11,28 +10,67 @@ export const generateCommitMessage = async (
 	GROQ_API_KEY: string,
 	model: string,
 	locale: string,
-	diff: string,
+	diff: string | string[],
 	maxLength: number,
 	type: CommitType
 ) => {
+	let previosCommists: string | string[] = '';
 	try {
-		const completios2 = await getGroqChatCompletion(
+		if (diff && Array.isArray(diff)) {
+			for (let i in diff) {
+				const result = await getGroqChatCompletion(
+					GROQ_API_KEY,
+					[
+						{
+							content: generatePrompt(
+								locale,
+								maxLength,
+								type,
+								previosCommists as string
+							),
+							role: 'system',
+						},
+						{
+							role: 'user',
+							content: diff[i],
+						},
+					],
+					model
+				);
+				previosCommists =
+					Number(i) !== diff.length - 1
+						? (previosCommists += result.choices
+								?.map(({ message }) => message.content as string)
+								.join(''))
+						: result.choices?.map(({ message }) => message.content as string);
+			}
+
+			return Array.isArray(previosCommists)
+				? previosCommists
+				: [previosCommists];
+		}
+
+		const result = await getGroqChatCompletion(
 			GROQ_API_KEY,
 			[
 				{
-					content: generatePrompt(locale, maxLength, type, diff),
-					role: 'assistant',
+					content: generatePrompt(locale, maxLength, type, previosCommists),
+					role: 'system',
+				},
+				{
+					role: 'user',
+					content: diff,
 				},
 			],
 			model
 		);
 
-		if (!completios2.choices.length) {
+		if (!result.choices.length) {
 			console.error('failed to generate commit messages please try agin');
 			process.exit(1);
 		}
 
-		const messages = completios2.choices?.map(
+		const messages = result.choices?.map(
 			({ message }) => message.content as string
 		);
 

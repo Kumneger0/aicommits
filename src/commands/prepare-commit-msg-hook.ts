@@ -1,10 +1,19 @@
 import fs from 'fs/promises';
 import { intro, outro, spinner } from '@clack/prompts';
 import { black, green, red, bgCyan } from 'kolorist';
-import { getStagedDiff } from '../utils/git.js';
+import {
+	getStagedDiff,
+	getStagedDiffForEachFileSeparatly,
+} from '../utils/git.js';
 import { getConfig } from '../utils/config.js';
 import { generateCommitMessage } from '../utils/generateCommit.js';
 import { KnownError, handleCliError } from '../utils/error.js';
+import {
+	calculateToken,
+	getCurrentModelTotalSupportedToken,
+	getOrganizedDiff,
+} from './aicg.js';
+import { models } from '../utils/models.js';
 
 const [messageFilePath, commitSource] = process.argv.slice(2);
 
@@ -23,9 +32,31 @@ export default (model?: string) =>
 
 		// All staged files can be ignored by our filter
 		const staged = await getStagedDiff();
+
+		const stagedArr = await getStagedDiffForEachFileSeparatly();
+
 		if (!staged) {
 			return;
 		}
+		const totalSupportedTokenByModel = getCurrentModelTotalSupportedToken(
+			model as (typeof models)[number]['id']
+		);
+
+		const { currentToken } = calculateToken(staged?.diff);
+
+		const eachDiffAlongWithToken = (
+			await getStagedDiffForEachFileSeparatly()
+		)?.map(({ diff }) => {
+			return {
+				diff,
+				token: calculateToken(diff).currentToken,
+			};
+		});
+
+		const diff =
+			currentToken > totalSupportedTokenByModel
+				? getOrganizedDiff(eachDiffAlongWithToken, totalSupportedTokenByModel)
+				: staged.diff;
 
 		intro(bgCyan(black(' aicg ')));
 
@@ -44,7 +75,7 @@ export default (model?: string) =>
 				config?.GROQ_API_KEY,
 				model ?? config.AICG_MODEL,
 				config.locale,
-				staged.diff,
+				diff,
 				config['max-length'],
 				config.type
 			);

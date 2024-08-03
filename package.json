@@ -23,7 +23,8 @@
 		"lint": "",
 		"type-check": "tsc",
 		"test": "tsx tests",
-		"prepack": "pnpm build && clean-pkg-json"
+		"prepack": "pnpm build && clean-pkg-json",
+		"dev": "pkgroll --clean-dist --watch --minify"
 	},
 	"dependencies": {
 		"@dqbd/tiktoken": "^1.0.2",
