@@ -5,26 +5,33 @@ import {
 	confirm,
 	intro,
 	isCancel,
+	log,
 	outro,
 	select,
 	spinner,
 } from '@clack/prompts';
 import { bgCyan, black, dim, green, red } from 'kolorist';
+import os from 'node:os';
 import { getConfig } from '../utils/config.js';
 import { KnownError, handleCliError } from '../utils/error.js';
 import { generateCommitMessage } from '../utils/generateCommit.js';
+
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { Worker } from 'worker_threads';
 import {
 	assertGitRepo,
 	getDetectedMessage,
 	getStagedDiff,
-	getStagedDiffForEachFileSeparatly,
+	getStagedDiffForEachFileSeparately,
 } from '../utils/git.js';
 import { models } from '../utils/models.js';
 
 export function getCurrentModelTotalSupportedToken(
 	modelID: (typeof models)[number]['id']
 ) {
-	return models.find(({ id }) => modelID == id)?.context_window ?? 5000;
+	const model = models.find(({ id }) => modelID == id);
+	return (model?.context_window ?? 5000) - 1000;
 }
 
 export const calculateToken = (diff: string) => {
@@ -37,32 +44,163 @@ export const calculateToken = (diff: string) => {
 		currentToken, //
 	};
 };
+
+type GitDiffType = {
+	diff: string;
+	token: number;
+	path: string;
+}[];
+
 export function getOrganizedDiff(
-	diffs: {
-		diff: string;
-		token: number;
-	}[],
+	diffs: GitDiffType,
 	totalSupportedTokenByModel: number
-) {
-	console.log(diffs);
+): (typeof diffs)[] {
+	const veryLargeDiffs: typeof diffs = [];
+	const reducedDiff = diffs.reduce<
+		{ diff: string; token: number; path: string }[]
+	>(
+		(acc, { diff, path, token }) => {
+			const lastDiff = acc.at(-1)!;
+			const isLargeFile = token > totalSupportedTokenByModel;
 
-	let tempDiff = [{ diff: '', token: 0 }];
-	let currentIndex = 0;
+			if (isLargeFile) {
+				veryLargeDiffs.push({ diff, path, token });
+				return acc;
+			}
+			const currentToken = lastDiff.token + token;
+			if (currentToken < totalSupportedTokenByModel) {
+				const lastIndex = acc.length - 1;
+				acc[lastIndex].diff += diff;
+				acc[lastIndex].token += Number(token);
+			} else {
+				acc.push({ diff, token, path: path });
+			}
 
-	for (let i = 0; i < diffs.length; i++) {
-		const currentDiff = diffs[i];
-		const currentTokenCount = tempDiff[currentIndex].token + currentDiff.token;
+			return acc;
+		},
+		[{ diff: '', token: 0, path: '' }]
+	);
 
-		if (currentTokenCount <= totalSupportedTokenByModel) {
-			tempDiff[currentIndex].diff += currentDiff.diff;
-			tempDiff[currentIndex].token += currentDiff.token;
-		} else {
-			tempDiff.push({ diff: currentDiff.diff, token: currentDiff.token });
-			currentIndex++;
+	return [reducedDiff, veryLargeDiffs];
+}
+
+export async function getUserConfrimationIfCodeBaseIsLarge([
+	diff,
+	largeDiffs,
+]: ReturnType<typeof getOrganizedDiff>) {
+	if (Array.isArray(diff) && diff.length > 1) {
+		console.log(
+			"Hey Developer 👋, you've made a large change to your codebase"
+		);
+		if (largeDiffs.length) {
+			console.log(
+				'Some of the files in your codebase have changes that are larger than the AI model can process in a single request'
+			);
+
+			largeDiffs.forEach(({ path }) => log.message(`- ${path}`));
+
+			const isUserAgreedToFilterOutFilesLargerThanSupputedTokenLimit =
+				await confirm({
+					message: `The AI model has limitations on the amount of code it can process at once. Would you like to proceed with generating commit messages for the remaining changes, excluding the larger files mentioned above?
+
+You can choose to cancel and consider breaking down the larger files into smaller chunks before trying again.`,
+				});
+
+			if (!isUserAgreedToFilterOutFilesLargerThanSupputedTokenLimit) {
+				console.log('Commit message generation cancelled.');
+				process.exit(0);
+			}
+		}
+		const isUserAgreedToMakeThoseApiRequests = await confirm({
+			message: `It looks like your codebase has a significant number of changes (${diff.length} chunks). Processing these changes will require making multiple API requests to the AI model, which may impact your daily API usage limit.
+            Would you like to proceed with generating commit messages for all these changes?`,
+		});
+
+		if (!isUserAgreedToMakeThoseApiRequests) {
+			console.log('Aborted');
+			process.exit(0);
 		}
 	}
+}
 
-	return tempDiff.map(({ diff }) => diff);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export async function splitGitDiff({
+	diff,
+	excludeFiles,
+	model,
+}: {
+	model: string;
+	diff: string;
+	excludeFiles?: string[];
+}) {
+	const workers: Worker[] = [];
+
+	const getCurrentCpuUsage = () => os.cpus().length - workers.length;
+
+	const totalSupportedTokenByModel = getCurrentModelTotalSupportedToken(
+		model as (typeof models)[number]['id']
+	);
+
+	const { currentToken } = calculateToken(diff);
+
+	const isCurrentTokenLargerThanSupportedToken =
+		currentToken > totalSupportedTokenByModel;
+
+	if (!isCurrentTokenLargerThanSupportedToken) return [diff];
+
+	const s = spinner();
+	s.start('Breaking down your changes into smaller chunks.');
+
+	const eachFIleGitDiff = await getStagedDiffForEachFileSeparately(
+		excludeFiles
+	);
+
+	const eachDiffAlongWithToken = await Promise.all(
+		eachFIleGitDiff.map(async ({ diff, filePath }, i) => {
+			const waitUntil = (res: (arg: boolean) => void) => {
+				interval = setInterval(() => {
+					if (getCurrentCpuUsage() > 0) {
+						res(true);
+					}
+				}, 200);
+			};
+
+			let interval: NodeJS.Timeout;
+
+			getCurrentCpuUsage() &&
+				(await new Promise<boolean>((res) => waitUntil(res)));
+
+			const worker = new Worker(path.join(__dirname, './worker.mjs'));
+			workers.push(worker);
+
+			return {
+				diff: diff,
+				token: await new Promise<number>((res) => {
+					worker.postMessage(diff);
+					worker?.on('message', ({ result }: { result: number }) => {
+						res(result);
+						worker.terminate();
+						clearInterval(interval);
+						workers.pop();
+					});
+				}),
+				path: filePath,
+			};
+		})
+	);
+
+	workers.forEach((worker) => worker.terminate());
+	s.stop();
+	return getOrganizedDiff(
+		eachDiffAlongWithToken as {
+			diff: string;
+			token: number;
+			path: string;
+		}[],
+		totalSupportedTokenByModel
+	);
 }
 
 export default async (
@@ -80,7 +218,6 @@ export default async (
 		const detectingFiles = spinner();
 
 		if (stageAll) {
-			// This should be equivalent behavior to `git commit --all`
 			await execa('git', ['add', '--update']);
 		}
 
@@ -93,39 +230,6 @@ export default async (
 				'No staged changes found. Stage your changes manually, or automatically stage all changes with the `--all` flag.'
 			);
 		}
-		const totalSupportedTokenByModel = getCurrentModelTotalSupportedToken(
-			model as (typeof models)[number]['id']
-		);
-
-
-		const { currentToken } = calculateToken(staged?.diff);
-
-		const isCurrentLargerThanSupportedToken =
-			currentToken > totalSupportedTokenByModel;
-
-		const eachDiffAlongWithToken = (
-			await getStagedDiffForEachFileSeparatly(excludeFiles)
-		)?.map((diff) => {
-			if (isCurrentLargerThanSupportedToken)
-				return {
-					diff: diff.diff,
-					token: calculateToken(diff.diff).currentToken,
-				};
-			return diff;
-		});
-
-		const diff = isCurrentLargerThanSupportedToken
-			? getOrganizedDiff(
-					eachDiffAlongWithToken as { diff: string; token: number }[],
-					totalSupportedTokenByModel
-			  )
-			: staged.diff;
-
-
-
-		console.log(diff);
-
-		return [];
 
 		detectingFiles.stop(
 			`${getDetectedMessage(staged.files)}:\n${staged.files
@@ -143,6 +247,19 @@ export default async (
 			type: commitType?.toString(),
 		});
 
+		const [organizedDiff, largeDiffs] = await splitGitDiff({
+			diff: staged.diff,
+			excludeFiles,
+			model: (model ?? config.AICG_MODEL) as (typeof models)[number]['id'],
+		});
+
+		if (Array.isArray(organizedDiff)) {
+			await getUserConfrimationIfCodeBaseIsLarge([
+				organizedDiff,
+				Array.isArray(largeDiffs) ? largeDiffs : [],
+			]);
+		}
+
 		const s = spinner();
 		s.start('The AI is analyzing your changes');
 		let messages: string[];
@@ -151,7 +268,7 @@ export default async (
 				config?.GROQ_API_KEY,
 				model ?? config.AICG_MODEL,
 				config.locale,
-				diff,
+				organizedDiff,
 				config['max-length'],
 				config.type
 			);

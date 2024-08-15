@@ -143,10 +143,8 @@ export default testSuite(({ describe }) => {
 				'gpt-3.5-turbo',
 				config.locale,
 				gitDiff,
-				config.generate,
 				config['max-length'],
-				config.type,
-				7000
+				config.type
 			);
 
 			return commitMessages[0];

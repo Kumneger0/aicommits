@@ -3,7 +3,7 @@ import { intro, outro, spinner } from '@clack/prompts';
 import { black, green, red, bgCyan } from 'kolorist';
 import {
 	getStagedDiff,
-	getStagedDiffForEachFileSeparatly,
+	getStagedDiffForEachFileSeparately,
 } from '../utils/git.js';
 import { getConfig } from '../utils/config.js';
 import { generateCommitMessage } from '../utils/generateCommit.js';
@@ -12,6 +12,8 @@ import {
 	calculateToken,
 	getCurrentModelTotalSupportedToken,
 	getOrganizedDiff,
+	getUserConfrimationIfCodeBaseIsLarge,
+	splitGitDiff,
 } from './aicg.js';
 import { models } from '../utils/models.js';
 
@@ -33,7 +35,7 @@ export default (model?: string) =>
 		// All staged files can be ignored by our filter
 		const staged = await getStagedDiff();
 
-		const stagedArr = await getStagedDiffForEachFileSeparatly();
+		const stagedArr = await getStagedDiffForEachFileSeparately();
 
 		if (!staged) {
 			return;
@@ -45,18 +47,19 @@ export default (model?: string) =>
 		const { currentToken } = calculateToken(staged?.diff);
 
 		const eachDiffAlongWithToken = (
-			await getStagedDiffForEachFileSeparatly()
-		)?.map(({ diff }) => {
+			await getStagedDiffForEachFileSeparately()
+		)?.map(({ diff, filePath }) => {
 			return {
 				diff,
 				token: calculateToken(diff).currentToken,
+				path: filePath,
 			};
 		});
 
-		const diff =
+		const [diff] =
 			currentToken > totalSupportedTokenByModel
 				? getOrganizedDiff(eachDiffAlongWithToken, totalSupportedTokenByModel)
-				: staged.diff;
+				: [staged.diff];
 
 		intro(bgCyan(black(' aicg ')));
 
@@ -67,6 +70,18 @@ export default (model?: string) =>
 				env.https_proxy || env.HTTPS_PROXY || env.http_proxy || env.HTTP_PROXY,
 		});
 
+		const [organizedDiff, largeDiffs] = await splitGitDiff({
+			diff: staged.diff,
+			model: (model ?? config.AICG_MODEL) as (typeof models)[number]['id'],
+		});
+
+		if (Array.isArray(organizedDiff)) {
+			await getUserConfrimationIfCodeBaseIsLarge([
+				organizedDiff,
+				Array.isArray(largeDiffs) ? largeDiffs : [],
+			]);
+		}
+
 		const s = spinner();
 		s.start('The AI is analyzing your changes');
 		let messages: string[];
@@ -75,7 +90,7 @@ export default (model?: string) =>
 				config?.GROQ_API_KEY,
 				model ?? config.AICG_MODEL,
 				config.locale,
-				diff,
+				organizedDiff,
 				config['max-length'],
 				config.type
 			);

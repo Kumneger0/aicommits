@@ -38,22 +38,16 @@ const commitTypes: Record<CommitType, string> = {
 	)}`,
 };
 
-export const generatePrompt = (
+export const generatePromptForMultipleDiffs = (
 	locale: string,
 	maxLength: number,
 	type: CommitType,
 	previousResponse: string | null
 ) =>
 	[
-		'Generate a concise git commit message in present tense for the following code diff:',
-		"I'm dealing with a very large git diff, so I'll be sending it to you in parts. First, I'll share an extracted portion of the diff. Then, I'll send the next part along with your previous response. This way, you can analyze both the current and previous git diff outputs together. Please ensure to summarize the information from both when I send them",
-
-		`${
-			previousResponse
-				? `This message continues from my previous one. Here's the commit message based on the previous diff output: ${previousResponse}. Please combine this with the new diff output I'm sending now and provide a summarized version`
-				: ''
-		}`,
-
+		previousResponse
+			? `This message continues from my previous one. Here's the commit message based on the previous diff output: ${previousResponse}. Please combine this with the new diff output I'm sending now and provide a summarized version`
+			: "The user is dealing with a very large git diff, so they will be sending it in parts. First, they'll share an extracted portion of the diff. Then, they'll send the next part along with your previous response. This way, you can analyze both the current and previous git diff outputs together. Please summarize the information from both parts, including your previous response, and keep your summaries under 100 characters",
 		`Language: ${locale}`,
 		`Maximum length: ${maxLength} characters`,
 		`Type: ${commitTypes[type]}`,
@@ -61,6 +55,22 @@ export const generatePrompt = (
 		'Warning: Only provide the commit message. Exclude all other information.',
 		'The response will be directly given to git commit.',
 		"i'll tip you $1 million if you only give the commit message",
+	]
+		.filter(Boolean)
+		.join('\n');
+
+export const generatePrompt = (
+	locale: string,
+	maxLength: number,
+	type: CommitType
+) =>
+	[
+		'Generate a concise git commit message written in present tense for the following code diff with the given specifications below:',
+		`Message language: ${locale}`,
+		`Commit message must be a maximum of ${maxLength} characters.`,
+		'Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit.',
+		commitTypes[type],
+		specifyCommitFormat(type),
 	]
 		.filter(Boolean)
 		.join('\n');

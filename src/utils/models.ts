@@ -86,7 +86,7 @@ export const models = [
 		created: 1693721698,
 		owned_by: 'Mistral AI',
 		active: true,
-		context_window: 32768,
+		context_window: 5000,
 		public_apps: null,
 	},
 	{

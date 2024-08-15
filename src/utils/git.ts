@@ -58,7 +58,7 @@ export const getStagedDiff = async (excludeFiles?: string[]) => {
 	};
 };
 
-export const getStagedDiffForEachFileSeparatly = async (
+export const getStagedDiffForEachFileSeparately = async (
 	excludeFiles?: string[]
 ) => {
 	const diffCached = ['diff', '--cached', '--diff-algorithm=minimal'];

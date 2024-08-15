@@ -5,6 +5,7 @@ import {
 	createGit,
 	files,
 } from '../../utils.js';
+import { getOrganizedDiff } from '../../../src/commands/aicg.js';
 
 export default testSuite(({ describe }) => {
 	if (process.platform === 'win32') {
@@ -491,6 +492,20 @@ export default testSuite(({ describe }) => {
 				expect(commitMessage?.length).toBeLessThanOrEqual(50);
 
 				await fixture.rm();
+			});
+			// Organizes diffs into smaller chunks when total tokens are within the supported limit
+			test('should organize diffs into smaller chunks when total tokens are within the supported limit', () => {
+				const diffs = [
+					{ diff: 'diff1', token: 50, path: 'file1' },
+					{ diff: 'diff2', token: 30, path: 'file2' },
+					{ diff: 'diff3', token: 20, path: 'file3' },
+				];
+				const totalSupportedTokenByModel = 100;
+				const result = getOrganizedDiff(diffs, totalSupportedTokenByModel);
+				expect(result[0]).toEqual([
+					{ diff: 'diff1diff2diff3', token: 100, path: '' },
+				]);
+				expect(result[1]).toEqual([]);
 			});
 		});
 	});

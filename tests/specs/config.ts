@@ -21,10 +21,6 @@ export default testSuite(({ describe }) => {
 			const { stderr } = await aicg(['config', 'set', 'GROQ_API_KEY=abc'], {
 				reject: false,
 			});
-
-			// expect(stderr).toMatch(
-			// 	'Invalid config property GROQ_API_KEY: Must start with "sk-"'
-			// );
 		});
 
 		await test('set config file', async () => {

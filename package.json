@@ -16,7 +16,8 @@
 	],
 	"bin": {
 		"aicg": "./dist/cli.mjs",
-		"aic": "./dist/cli.mjs"
+		"aic": "./dist/cli.mjs",
+		"worker": "./dist/worker.mjs"
 	},
 	"scripts": {
 		"build": "pkgroll --minify",

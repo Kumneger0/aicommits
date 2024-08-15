@@ -1,6 +1,6 @@
 import type { CommitType } from './config.js';
 import { KnownError } from './error.js';
-import { generatePrompt } from './prompt.js';
+import { generatePrompt, generatePromptForMultipleDiffs } from './prompt.js';
 
 import { getGroqChatCompletion } from './groq.js';
 
@@ -10,17 +10,33 @@ export const generateCommitMessage = async (
 	GROQ_API_KEY: string,
 	model: string,
 	locale: string,
-	diff: string | string[],
+	diff:
+		| string
+		| {
+				diff: string;
+				token: number;
+				path: string;
+		  }[],
 	maxLength: number,
 	type: CommitType
 ) => {
 	let previousCommits: string = '';
-	const generateAndProcessResult = async (diffItem: string) => {
+	const generateAndProcessResult = async (
+		diffItem: string,
+		isSingle = false
+	) => {
 		const result = await getGroqChatCompletion(
 			GROQ_API_KEY,
 			[
 				{
-					content: generatePrompt(locale, maxLength, type, previousCommits),
+					content: isSingle
+						? generatePrompt(locale, maxLength, type)
+						: generatePromptForMultipleDiffs(
+								locale,
+								maxLength,
+								type,
+								previousCommits
+						  ),
 					role: 'system',
 				},
 				{
@@ -41,30 +57,26 @@ export const generateCommitMessage = async (
 			.join('');
 	};
 
-	try {
-		if (Array.isArray(diff)) {
-			for (const i in diff) {
-				const resultContent = await generateAndProcessResult(diff[i]);
-				if (Number(i) !== diff.length - 1) {
-					previousCommits += resultContent;
-				} else {
-					previousCommits = resultContent;
+	if (Array.isArray(diff)) {
+		for (const i in diff) {
+			try {
+				console.log(`  
+					Generated ${i} out of ${diff.length}`);
+				const resultContent = await generateAndProcessResult(diff[i].diff);
+				previousCommits = resultContent;
+			} catch (error) {
+				const errorAsAny = error as any;
+				if (errorAsAny.code === 'ENOTFOUND') {
+					throw new KnownError(
+						`Error connecting to ${errorAsAny.hostname} (${errorAsAny.syscall}). Are you connected to the internet?`
+					);
 				}
+				throw errorAsAny;
 			}
-
-			return [previousCommits];
-		} else {
-			const resultContent = await generateAndProcessResult(diff);
-			return deduplicateMessages([resultContent]);
 		}
-	} catch (error) {
-		const errorAsAny = error as any;
-		if (errorAsAny.code === 'ENOTFOUND') {
-			throw new KnownError(
-				`Error connecting to ${errorAsAny.hostname} (${errorAsAny.syscall}). Are you connected to the internet?`
-			);
-		}
-
-		throw errorAsAny;
+		return [previousCommits];
+	} else {
+		const resultContent = await generateAndProcessResult(diff, true);
+		return deduplicateMessages([resultContent]);
 	}
 };
