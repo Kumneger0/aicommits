@@ -97,11 +97,8 @@ export default async (
 			model as (typeof models)[number]['id']
 		);
 
-		console.log('total supported token', totalSupportedTokenByModel);
 
 		const { currentToken } = calculateToken(staged?.diff);
-
-		console.log('currentToken', currentToken);
 
 		const isCurrentLargerThanSupportedToken =
 			currentToken > totalSupportedTokenByModel;
@@ -124,7 +121,11 @@ export default async (
 			  )
 			: staged.diff;
 
-		console.log('ffaljflaj', diff.length);
+
+
+		console.log(diff);
+
+		return [];
 
 		detectingFiles.stop(
 			`${getDetectedMessage(staged.files)}:\n${staged.files
