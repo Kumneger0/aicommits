@@ -28,6 +28,9 @@ const configParsers = {
 		}
 		return key;
 	},
+	skip_user_confirimation: (skip?: string) => {
+		return Boolean(skip);
+	},
 	AICG_MODEL(key?: string) {
 		return key ?? 'mixtral-8x7b-32768';
 	},

@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import { intro, outro, spinner } from '@clack/prompts';
+import { confirm, intro, outro, spinner } from '@clack/prompts';
 import { black, green, red, bgCyan } from 'kolorist';
 import {
 	getStagedDiff,
@@ -75,11 +75,11 @@ export default (model?: string) =>
 			model: (model ?? config.AICG_MODEL) as (typeof models)[number]['id'],
 		});
 
-		if (Array.isArray(organizedDiff)) {
-			await getUserConfrimationIfCodeBaseIsLarge([
-				organizedDiff,
-				Array.isArray(largeDiffs) ? largeDiffs : [],
-			]);
+		if (!config.skip_user_confirimation && Array.isArray(organizedDiff)) {
+			await getUserConfrimationIfCodeBaseIsLarge(
+				[organizedDiff, Array.isArray(largeDiffs) ? largeDiffs : []],
+				true
+			);
 		}
 
 		const s = spinner();
