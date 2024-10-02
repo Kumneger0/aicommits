@@ -5,7 +5,7 @@ import prepareCommitMessageHook from './commands/prepare-commit-msg-hook.js';
 import configCommand from './commands/config.js';
 import hookCommand, { isCalledFromGitHook } from './commands/hook.js';
 import modelsCommand from './commands/models.js';
-
+import prgen from './commands/prgen.js';
 const rawArgv = process.argv.slice(2);
 
 cli(
@@ -43,9 +43,14 @@ cli(
 				description: 'Specify Model',
 				alias: 'k',
 			},
+			prgen: {
+				type: String,
+				description: "Automatically generate a pull request description based on commit messages",
+				alias:"p",
+			}
 		},
 
-		commands: [configCommand, hookCommand, modelsCommand],
+		commands: [configCommand, hookCommand, modelsCommand, prgen],
 
 		help: {
 			description,

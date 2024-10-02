@@ -41,15 +41,14 @@ export const calculateToken = (diff: string) => {
 	const encoded = encoder.encode(diff);
 	const currentToken = encoded.length;
 	return {
-		currentToken :10000000, //
+		currentToken
 	};
 };
-
 type GitDiffType = {
-	diff: string;
-	token: number;
-	path: string;
+	diff: string; token: number; path: string;
 }[];
+
+
 
 export function getOrganizedDiff(
 	diffs: GitDiffType,
@@ -110,13 +109,13 @@ export async function getUserConfrimationIfCodeBaseIsLarge(
 			const isUserAgreedToFilterOutFilesLargerThanSupputedTokenLimit =
 				isCalledFromHook
 					? showMessageWhenCalledFromHook(
-							'The AI model has limitations on the amount of code it can process at once. Would you like to proceed with generating commit messages for the remaining changes, excluding the larger files mentioned above? you can cancel with ctrl + c'
-					  )
+						'The AI model has limitations on the amount of code it can process at once. Would you like to proceed with generating commit messages for the remaining changes, excluding the larger files mentioned above? you can cancel with ctrl + c'
+					)
 					: await confirm({
-							message: `The AI model has limitations on the amount of code it can process at once. Would you like to proceed with generating commit messages for the remaining changes, excluding the larger files mentioned above?
+						message: `The AI model has limitations on the amount of code it can process at once. Would you like to proceed with generating commit messages for the remaining changes, excluding the larger files mentioned above?
 
 You can choose to cancel and consider breaking down the larger files into smaller chunks before trying again.`,
-					  });
+					});
 
 			if (!isUserAgreedToFilterOutFilesLargerThanSupputedTokenLimit) {
 				console.log('Commit message generation cancelled.');
@@ -125,12 +124,12 @@ You can choose to cancel and consider breaking down the larger files into smalle
 		}
 		const isUserAgreedToMakeThoseApiRequests = isCalledFromHook
 			? await showMessageWhenCalledFromHook(
-					'It looks like your codebase has a significant number of changes (${diff.length} chunks). Processing these changes will require making multiple API requests to the AI model, which may impact your daily API usage limit. you can cancel with ctrl + c'
-			  )
+				'It looks like your codebase has a significant number of changes (${diff.length} chunks). Processing these changes will require making multiple API requests to the AI model, which may impact your daily API usage limit. you can cancel with ctrl + c'
+			)
 			: await confirm({
-					message: `It looks like your codebase has a significant number of changes (${diff.length} chunks). Processing these changes will require making multiple API requests to the AI model, which may impact your daily API usage limit.
+				message: `It looks like your codebase has a significant number of changes (${diff.length} chunks). Processing these changes will require making multiple API requests to the AI model, which may impact your daily API usage limit.
             Would you like to proceed with generating commit messages for all these changes?`,
-			  });
+			});
 
 		if (!isUserAgreedToMakeThoseApiRequests) {
 			console.log('Aborted');

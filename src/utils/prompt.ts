@@ -69,8 +69,23 @@ export const generatePrompt = (
 		`Message language: ${locale}`,
 		`Commit message must be a maximum of ${maxLength} characters.`,
 		'Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit.',
-		commitTypes[type],
-		specifyCommitFormat(type),
-	]
-		.filter(Boolean)
+		commitTypes[type], specifyCommitFormat(type), ] .filter(Boolean)
 		.join('\n');
+
+export const getPrGenPrompt = (msgs: string) => {
+	const prGenPromt = `Assume you are a developer who has added the following commit message:
+${msgs}
+Now, you are about to create a pull request and need to write a title and description.
+Please provide the title and description in JSON format:
+{
+  "title": "your_title_here",
+  "description": "your_description_here"
+}
+
+Note: Please provide only the title and description. Do not include any additional information, as your response will be saved to a file
+`
+		return prGenPromt
+}
+
+
+

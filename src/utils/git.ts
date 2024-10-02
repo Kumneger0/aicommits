@@ -1,4 +1,5 @@
 import { execa } from 'execa';
+import { stdout } from 'node:process';
 import { KnownError } from './error.js';
 
 export const assertGitRepo = async () => {
@@ -35,6 +36,9 @@ export const getStagedFileNamesOnly = async (
 		...filesToExclude,
 		...(excludeFiles ? excludeFiles.map(excludeFromDiff) : []),
 	]);
+
+
+
 	return files;
 };
 
@@ -61,18 +65,16 @@ export const getStagedDiff = async (excludeFiles?: string[]) => {
 export const getStagedDiffForEachFileSeparately = async (
 	excludeFiles?: string[]
 ) => {
-	const diffCached = ['diff', '--cached', '--diff-algorithm=minimal', "--"];
+	const diffCached = ['diff', '--cached', '--diff-algorithm=minimal' ];
 	const files = await getStagedFileNamesOnly(diffCached, excludeFiles);
-
 	if (!files) {
 		return [];
 	}
-
 	const stagedFilesArray = files.split('\n');
 
 	const stagedDiffArr = await Promise.all(
 		stagedFilesArray.map(async (file) => {
-			const { stdout: diff } = await execa('git', [...diffCached, file]);
+			const { stdout: diff } = await execa('git', [...diffCached, "--", file]);
 			return { filePath: file, diff };
 		})
 	);
