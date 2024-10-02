@@ -5,9 +5,8 @@ import { handleCliError, KnownError } from "../utils/error.js";
 import { getCommitMessages } from "../utils/getCommitMessagesForPrGen.js";
 import { getGroqChatCompletion } from "../utils/groq.js";
 import { getPrGenPrompt } from "../utils/prompt.js";
-import fs, { existsSync } from 'node:fs'
+import fs from 'node:fs'
 import { join } from "node:path";
-import { execa } from "execa";
 import { outro, spinner } from "@clack/prompts";
 export default command(
 	{
@@ -25,7 +24,8 @@ export default command(
 				type: String,
 				description: 'Specify the ending commit (default: latest commit)',
 				default: null
-			},
+			}
+
 		},
 		ignoreArgv: (type) => type === 'unknown-flag' || type === 'argument',
 	},
@@ -44,14 +44,13 @@ export default command(
 				);
 			}
 			const { from, to } = argv.flags;
-			// Display options
 			if (!from) {
 				console.log('from commit is missing')
 				return
 			}
-		const s = spinner();
+			const s = spinner();
 			s.start('generation pull request title and description')
-			const msgs = await getCommitMessages(from)
+			const msgs = await getCommitMessages(from, to)
 			const promt = getPrGenPrompt(msgs)
 			const { choices } = await getGroqChatCompletion(GROQ_API_KEY, [{
 				role: 'user',
@@ -65,10 +64,8 @@ export default command(
 				fs.mkdirSync('.aicg')
 				fs.writeFileSync(join(wdr, '.aicg', 'pr.json'), json || '{"title":"error", "description":"failed to generte"}', { encoding: 'utf8' })
 			}
-   s.stop()
-
-		outro(`${green('✔')} Successfully committed!`);
-   console.log('done')
+			s.stop()
+			outro(`${green('✔')} Successfully committed!`);
 		})().catch((error) => {
 			console.error(`${red('✖')} ${error.message}`);
 			handleCliError(error);

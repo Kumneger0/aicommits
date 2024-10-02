@@ -19,7 +19,7 @@
    npm install -g aicg
    ```
 
-2. Retrieve your API key from [GROQ](https://console.groq.com/keys)
+2. Retrieve your API key from [GROQ](https://console.groq.com/keys)- `--title <title>`: Custom title for the pull request. If not provided, a default title will be generated.
 
    > Note: If you haven't already, you'll have to create an account and set up billing.
 
@@ -249,6 +249,18 @@ You can clear this option by setting it to an empty string:
 aicg config set type=
 ```
 
+#### PRGen
+
+##### Usage
+
+You can call `aicg prgen` to generate a pull request description based on your commit messages:
+the generated pull request description and title are saved in a JSON file located at `.aicg/pr.json`. This allows you to easily access, review, and edit the generated content before submitting your pull request
+- `--from <commit-id>`: Specify the starting commit.
+- `--to <commit-id>`: Specify the ending commit (default: latest commit).
+
+```sh
+aicg prgen --from <commit-id>
+```
 ## How it works
 
 This CLI tool runs `git diff` to grab all your latest code changes, sends them to GROQ, then returns the AI generated commit message.
