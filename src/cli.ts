@@ -11,12 +11,8 @@ const rawArgv = process.argv.slice(2);
 cli(
 	{
 		name: 'aicg',
-
 		version,
-
 		/**
-		 * Since this is a wrapper around `git commit`,
-		 * flags should not overlap with it
 		 * https://git-scm.com/docs/git-commit
 		 */
 		flags: {
@@ -33,8 +29,7 @@ cli(
 			},
 			all: {
 				type: Boolean,
-				description:
-					'Automatically stage changes in tracked files for the commit',
+				description: 'Automatically stage changes in tracked files for the commit',
 				alias: 'a',
 				default: false,
 			},
@@ -68,9 +63,9 @@ cli(
 				argv.flags.all,
 				argv.flags.type,
 				argv.flags.model,
-				rawArgv
+				rawArgv,
 			);
 		}
 	},
-	rawArgv
+	rawArgv,
 );

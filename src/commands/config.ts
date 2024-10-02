@@ -2,11 +2,9 @@ import { command } from 'cleye';
 import { red } from 'kolorist';
 import { hasOwn, getConfig, setConfigs } from '../utils/config.js';
 import { KnownError, handleCliError } from '../utils/error.js';
-
 export default command(
 	{
 		name: 'config',
-
 		parameters: ['<mode>', '<key=value...>'],
 	},
 	(argv) => {
@@ -22,19 +20,15 @@ export default command(
 				}
 				return;
 			}
-
 			if (mode === 'set') {
-				await setConfigs(
-					keyValues.map((keyValue) => keyValue.split('=') as [string, string])
-				);
+				await setConfigs(keyValues.map((keyValue) => keyValue.split('=') as [string, string]));
 				return;
 			}
-
 			throw new KnownError(`Invalid mode: ${mode}`);
 		})().catch((error) => {
 			console.error(`${red('✖')} ${error.message}`);
 			handleCliError(error);
 			process.exit(1);
 		});
-	}
+	},
 );

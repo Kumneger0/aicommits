@@ -9,7 +9,6 @@ import { KnownError, handleCliError } from '../utils/error.js';
 
 const hookName = 'prepare-commit-msg';
 const symlinkPath = `.git/hooks/${hookName}`;
-
 const hookPath = fileURLToPath(new URL('cli.mjs', import.meta.url));
 
 export const isCalledFromGitHook = process.argv[1]
@@ -36,15 +35,13 @@ export default command(
 			const hookExists = await fileExists(absoltueSymlinkPath);
 			if (mode === 'install') {
 				if (hookExists) {
-					const realpath = await fs
-						.realpath(absoltueSymlinkPath)
-						.catch(() => {});
+					const realpath = await fs.realpath(absoltueSymlinkPath).catch(() => {});
 					if (realpath === hookPath) {
 						console.warn('The hook is already installed');
 						return;
 					}
 					throw new KnownError(
-						`A different ${hookName} hook seems to be installed. Please remove it before installing aicg.`
+						`A different ${hookName} hook seems to be installed. Please remove it before installing aicg.`,
 					);
 				}
 
@@ -79,17 +76,15 @@ export default command(
 						return;
 					}
 				}
-
 				await fs.rm(absoltueSymlinkPath);
 				console.log(`${green('✔')} Hook uninstalled`);
 				return;
 			}
-
 			throw new KnownError(`Invalid mode: ${mode}`);
 		})().catch((error) => {
 			console.error(`${red('✖')} ${error.message}`);
 			handleCliError(error);
 			process.exit(1);
 		});
-	}
+	},
 );

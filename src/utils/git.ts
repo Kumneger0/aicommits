@@ -61,7 +61,7 @@ export const getStagedDiff = async (excludeFiles?: string[]) => {
 export const getStagedDiffForEachFileSeparately = async (
 	excludeFiles?: string[]
 ) => {
-	const diffCached = ['diff', '--cached', '--diff-algorithm=minimal'];
+	const diffCached = ['diff', '--cached', '--diff-algorithm=minimal', "--"];
 	const files = await getStagedFileNamesOnly(diffCached, excludeFiles);
 
 	if (!files) {

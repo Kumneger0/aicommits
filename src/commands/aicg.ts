@@ -41,7 +41,7 @@ export const calculateToken = (diff: string) => {
 	const encoded = encoder.encode(diff);
 	const currentToken = encoded.length;
 	return {
-		currentToken, //
+		currentToken :10000000, //
 	};
 };
 
