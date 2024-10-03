@@ -54,7 +54,6 @@ export const generatePromptForMultipleDiffs = (
 		`Format: ${specifyCommitFormat(type)}`,
 		'Warning: Only provide the commit message. Exclude all other information.',
 		'The response will be directly given to git commit.',
-		"i'll tip you $1 million if you only give the commit message",
 	]
 		.filter(Boolean)
 		.join('\n');

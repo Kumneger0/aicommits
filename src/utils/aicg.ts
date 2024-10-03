@@ -12,9 +12,9 @@ import {
 } from '@clack/prompts';
 import { bgCyan, black, dim, green, red } from 'kolorist';
 import os from 'node:os';
-import { getConfig } from '../utils/config.js';
-import { KnownError, handleCliError } from '../utils/error.js';
-import { generateCommitMessage } from '../utils/generateCommit.js';
+import { getConfig } from './config.js';
+import { KnownError, handleCliError } from './error.js';
+import { generateCommitMessage } from './generateCommit.js';
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,8 +24,8 @@ import {
 	getDetectedMessage,
 	getStagedDiff,
 	getStagedDiffForEachFileSeparately,
-} from '../utils/git.js';
-import { models } from '../utils/models.js';
+} from './git.js';
+import { models } from './models.js';
 
 export function getCurrentModelTotalSupportedToken(
 	modelID: (typeof models)[number]['id']
@@ -41,14 +41,14 @@ export const calculateToken = (diff: string) => {
 	const encoded = encoder.encode(diff);
 	const currentToken = encoded.length;
 	return {
-		currentToken
+		currentToken,
 	};
 };
 type GitDiffType = {
-	diff: string; token: number; path: string;
+	diff: string;
+	token: number;
+	path: string;
 }[];
-
-
 
 export function getOrganizedDiff(
 	diffs: GitDiffType,
@@ -83,58 +83,75 @@ export function getOrganizedDiff(
 	return [reducedDiff, veryLargeDiffs];
 }
 
-
-
 async function showMessageWhenCalledFromHook(message: string) {
 	console.log(message);
 	return true;
 }
 
-
-export async function getUserConfrimationIfCodeBaseIsLarge(
+export async function getUserConfirmationIfCodeBaseIsLarge(
 	[diff, largeDiffs]: ReturnType<typeof getOrganizedDiff>,
 	isCalledFromHook = false
 ) {
-	if (Array.isArray(diff) && diff.length > 1) {
-		console.log(
-			"Hey Developer 👋, you've made a large change to your codebase"
-		);
-		if (largeDiffs.length) {
-			console.log(
-				'Some of the files in your codebase have changes that are larger than the AI model can process in a single request'
-			);
+	if (!Array.isArray(diff) || diff.length <= 1) return;
 
-			largeDiffs.forEach(({ path }) => log.message(`- ${path}`));
+	console.log("Hey Developer 👋, you've made a large change to your codebase");
 
-			const isUserAgreedToFilterOutFilesLargerThanSupputedTokenLimit =
-				isCalledFromHook
-					? showMessageWhenCalledFromHook(
-						'The AI model has limitations on the amount of code it can process at once. Would you like to proceed with generating commit messages for the remaining changes, excluding the larger files mentioned above? you can cancel with ctrl + c'
-					)
-					: await confirm({
-						message: `The AI model has limitations on the amount of code it can process at once. Would you like to proceed with generating commit messages for the remaining changes, excluding the larger files mentioned above?
+	if (largeDiffs.length) {
+		await handleLargeDiffs(largeDiffs, isCalledFromHook);
+	}
 
-You can choose to cancel and consider breaking down the larger files into smaller chunks before trying again.`,
-					});
+	await confirmMultipleApiRequests(diff.length, isCalledFromHook);
+}
 
-			if (!isUserAgreedToFilterOutFilesLargerThanSupputedTokenLimit) {
-				console.log('Commit message generation cancelled.');
-				process.exit(0);
-			}
-		}
-		const isUserAgreedToMakeThoseApiRequests = isCalledFromHook
-			? await showMessageWhenCalledFromHook(
-				'It looks like your codebase has a significant number of changes (${diff.length} chunks). Processing these changes will require making multiple API requests to the AI model, which may impact your daily API usage limit. you can cancel with ctrl + c'
-			)
-			: await confirm({
-				message: `It looks like your codebase has a significant number of changes (${diff.length} chunks). Processing these changes will require making multiple API requests to the AI model, which may impact your daily API usage limit.
-            Would you like to proceed with generating commit messages for all these changes?`,
-			});
+async function handleLargeDiffs(largeDiffs: any[], isCalledFromHook: boolean) {
+	console.log(
+		'Some files have changes larger than the AI model can process in a single request'
+	);
+	largeDiffs.forEach(({ path }) => log.message(`- ${path}`));
 
-		if (!isUserAgreedToMakeThoseApiRequests) {
-			console.log('Aborted');
-			process.exit(0);
-		}
+	const message =
+		'The AI model has limitations on the amount of code it can process at once. ' +
+		'Would you like to proceed with generating commit messages for the remaining changes, ' +
+		'excluding the larger files mentioned above?';
+
+	const confirmed = isCalledFromHook
+		? await showMessageWhenCalledFromHook(
+				message + ' You can cancel with ctrl + c'
+		  )
+		: await confirm({
+				message:
+					message +
+					'\n\nYou can choose to cancel and consider breaking down the larger files into smaller chunks before trying again.',
+		  });
+
+	if (!confirmed) {
+		console.log('Commit message generation cancelled.');
+		process.exit(0);
+	}
+}
+
+async function confirmMultipleApiRequests(
+	diffLength: number,
+	isCalledFromHook: boolean
+) {
+	const message =
+		`It looks like your codebase has a significant number of changes (${diffLength} chunks). ` +
+		'Processing these changes will require making multiple API requests to the AI model, ' +
+		'which may impact your daily API usage limit.';
+
+	const confirmed = isCalledFromHook
+		? await showMessageWhenCalledFromHook(
+				message + ' You can cancel with ctrl + c'
+		  )
+		: await confirm({
+				message:
+					message +
+					'\nWould you like to proceed with generating commit messages for all these changes?',
+		  });
+
+	if (!confirmed) {
+		console.log('Aborted');
+		process.exit(0);
 	}
 }
 
@@ -270,7 +287,7 @@ export default async (
 		});
 
 		if (!config.skip_user_confirimation && Array.isArray(organizedDiff)) {
-			await getUserConfrimationIfCodeBaseIsLarge([
+			await getUserConfirmationIfCodeBaseIsLarge([
 				organizedDiff,
 				Array.isArray(largeDiffs) ? largeDiffs : [],
 			]);

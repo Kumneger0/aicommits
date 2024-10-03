@@ -1,6 +1,6 @@
 import { cli } from 'cleye';
 import { description, version } from '../package.json';
-import aicg from './commands/aicg.js';
+import aicg from './utils/aicg.js';
 import prepareCommitMessageHook from './commands/prepare-commit-msg-hook.js';
 import configCommand from './commands/config.js';
 import hookCommand, { isCalledFromGitHook } from './commands/hook.js';

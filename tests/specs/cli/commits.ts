@@ -5,7 +5,7 @@ import {
 	createGit,
 	files,
 } from '../../utils.js';
-import { getOrganizedDiff } from '../../../src/commands/aicg.js';
+import { getOrganizedDiff } from '../../../src/utils/aicg.js';
 
 export default testSuite(({ describe }) => {
 	if (process.platform === 'win32') {

@@ -12,9 +12,9 @@ import {
 	calculateToken,
 	getCurrentModelTotalSupportedToken,
 	getOrganizedDiff,
-	getUserConfrimationIfCodeBaseIsLarge,
+	getUserConfirmationIfCodeBaseIsLarge,
 	splitGitDiff,
-} from './aicg.js';
+} from '../utils/aicg.js';
 import { models } from '../utils/models.js';
 
 const [messageFilePath, commitSource] = process.argv.slice(2);
@@ -76,7 +76,7 @@ export default (model?: string) =>
 		});
 
 		if (!config.skip_user_confirimation && Array.isArray(organizedDiff)) {
-			await getUserConfrimationIfCodeBaseIsLarge(
+			await getUserConfirmationIfCodeBaseIsLarge(
 				[organizedDiff, Array.isArray(largeDiffs) ? largeDiffs : []],
 				true
 			);

@@ -254,13 +254,41 @@ aicg config set type=
 ##### Usage
 
 You can call `aicg prgen` to generate a pull request description based on your commit messages:
-the generated pull request description and title are saved in a JSON file located at `.aicg/pr.json`. This allows you to easily access, review, and edit the generated content before submitting your pull request
-- `--from <commit-id>`: Specify the starting commit.
+The generated pull request description and title are saved in a JSON file located at `.aicg/pr.json`. This allows you to easily access, review, and edit the generated content before submitting your pull request.
+
+- `--from <commit-id>`: (Required) Specify the starting commit.
 - `--to <commit-id>`: Specify the ending commit (default: latest commit).
+- `--current-user-only` or `-u`: Filter commits for the current user only (default: false).
 
 ```sh
-aicg prgen --from <commit-id>
-```
+aicg prgen --from <commit-id> [--to <commit-id>] [--current-user-only]
+````
+
+
+Examples:
+
+1. Generate PR description for all commits from a specific commit (default behavior):
+   ```sh
+   aicg prgen --from abc123
+   ```
+
+2. Generate PR description for commits between two specific commits:
+   ```sh
+   aicg prgen --from abc123 --to def456
+   ```
+
+3. Generate PR description for only the current user's commits from a specific commit:
+   ```sh
+   aicg prgen --from abc123 --current-user-only
+   ```
+
+4. Using the short alias for current user only:
+   ```sh
+   aicg prgen --from abc123 -u
+   ```
+
+Note: The `--from` flag is required. By default, `aicg prgen` includes commits from all users. Use the `--current-user-only` or `-u` flag to filter commits for the current user only.
+
 ## How it works
 
 This CLI tool runs `git diff` to grab all your latest code changes, sends them to GROQ, then returns the AI generated commit message.
